@@ -1,0 +1,40 @@
+<launch>
+
+  <!-- Arguments -->
+  <arg name="dataset_folder" value="/home/bjoshi/cave/mav0"/>
+  <arg name="scale" value="0.5"/>
+  <!-- <arg name="bag_file" value="/home/bjoshi/Downloads/cave_loop_w_cam_info.bag"/> -->
+
+  <param name="/use_sim_time" value="true"/>
+
+  <!-- <node name="rosbag" pkg="rosbag" type="play" args="$(arg bag_file) clock" />  -->
+
+  <!-- To un-compress image topics -->
+  <node name="republish1" type="republish" pkg="image_transport" output="screen" args="compressed in:=/slave1/image_raw raw out:=/slave1/image_raw" />
+  <node name="republish2" type="republish" pkg="image_transport" output="screen" args="compressed in:=/slave2/image_raw raw out:=/slave2/image_raw" />
+
+  <!-- Run the stereo image proc --> 
+  <node pkg="stereo_image_proc" type="stereo_image_proc" name="stereo_image_proc" >
+    <remap from="/left/image_raw" to="/slave1/image_raw" />
+    <remap from="/right/image_raw" to="/slave2/image_raw" />
+    <remap from="/left/camera_info" to="/slave1/image_raw/cam_info" />
+    <remap from="/right/camera_info" to="/slave2/image_raw/cam_info" />
+    <param name="approximate_sync" value="true"/>
+  </node>
+
+  
+  <node name="bag_to_asl" pkg="utils_ros" type="bag_to_asl.py" output="screen"> 
+
+    <remap from="/camera0" to="/left/image_rect"/> 
+    <remap from="/camera1" to="/right/image_rect"/> 
+    <remap from="/imu" to="/imu/imu" />
+
+    <param name="dataset_path" value="$(arg dataset_folder)"/>
+    <param name="scale" value="$(arg scale)"/>
+
+
+  </node>
+
+</launch>
+
+
