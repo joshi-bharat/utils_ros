@@ -1,0 +1,19 @@
+<launch>
+
+  <!-- Arguments -->
+  <arg name="dataset_folder" value="/home/bjoshi/cave"/>
+  <arg name="scale" value="1.0"/>
+  <arg name="bagfile" value="/home/bjoshi/cave.bag"/>
+
+  <node name="asl_to_rosbag" pkg="utils_ros" type="asl_to_rosbag.py" output="screen"> 
+
+    <param name="dataset_path" value="$(arg dataset_folder)"/>
+    <param name="scale" value="$(arg scale)"/>
+    <param name="bagfile" value="$(arg bagfile)"/>
+
+
+  </node>
+
+</launch>
+
+

@@ -13,3 +13,8 @@ catkin_install_python(PROGRAMS
   scripts/bag_to_asl.py
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/bag_to_asl
 )
+
+catkin_install_python(PROGRAMS
+  scripts/asl_to_rosbag.py
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/asl_to_rosbag
+)
