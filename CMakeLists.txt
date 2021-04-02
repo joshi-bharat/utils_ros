@@ -24,6 +24,11 @@ catkin_install_python(PROGRAMS
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/asl_to_rosbag
 )
 
+catkin_install_python(PROGRAMS
+  scripts/bag_to_colmap.py
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/bag_to_colmap
+)
+
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
@@ -44,4 +49,7 @@ target_link_libraries(euroc_data_provider
 # target_compile_options(euroc_data_provider  PRIVATE -march=native)
 add_executable(asl_to_rosbag src/ASLtoRosBag.cpp)
 target_link_libraries(asl_to_rosbag euroc_data_provider)
+
+add_executable(pose_interpolate src/PoseInterpolate.cpp)
+target_link_libraries(pose_interpolate euroc_data_provider)
 

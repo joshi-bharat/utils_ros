@@ -1,0 +1,41 @@
+<launch>
+
+  <!-- Arguments -->
+  <arg name="image_dir" value="/home/bjoshi/colmap_cave/images"/>
+  <arg name="scale" value="0.5"/>
+  <arg name="img_freq" value="4"/>
+  <!-- <arg name="bag_file" value="/home/bjoshi/Downloads/cave_loop_w_cam_info.bag"/> -->
+
+  <param name="/use_sim_time" value="true"/>
+
+  <!-- <node name="rosbag" pkg="rosbag" type="play" args="$(arg bag_file) clock" />  -->
+
+  <!-- To un-compress image topics -->
+  <node name="republish1" type="republish" pkg="image_transport" output="screen" args="compressed in:=/slave1/image_raw raw out:=/slave1/image_raw" />
+  <node name="republish2" type="republish" pkg="image_transport" output="screen" args="compressed in:=/slave2/image_raw raw out:=/slave2/image_raw" />
+
+  <!-- Run the stereo image proc --> 
+  <!-- <node pkg="stereo_image_proc" type="stereo_image_proc" name="stereo_image_proc" > -->
+    <!-- <remap from="/left/image_raw" to="/slave1/image_raw" /> -->
+    <!-- <remap from="/right/image_raw" to="/slave2/image_raw" /> -->
+    <!-- <remap from="/left/camera_info" to="/slave1/image_raw/cam_info" /> -->
+    <!-- <remap from="/right/camera_info" to="/slave2/image_raw/cam_info" /> -->
+    <!-- <param name="approximate_sync" value="true"/> -->
+  <!-- </node> -->
+
+  
+  <node name="bag_to_colmap" pkg="utils_ros" type="bag_to_colmap.py" output="screen"> 
+
+    <remap from="/camera0" to="/slave1/image_raw"/> 
+    <remap from="/camera1" to="/slave2/image_raw"/> 
+    <remap from="/imu" to="/imu/imu" />
+
+    <param name="image_dir" value="$(arg image_dir)"/>
+    <param name="scale" value="$(arg scale)"/>
+    <param name="img_freq" value="$(arg img_freq)"/>
+
+  </node>
+
+</launch>
+
+

@@ -1,0 +1,16 @@
+<launch>
+
+  <!-- Arguments -->
+  <arg name="dataset_folder" value="/home/bjoshi/cave"/>
+  <arg name="interpolated_file" value="$(arg dataset_folder)/mav0/state_groundtruth_estimate0/interpolate_data.csv"/>
+
+  <node name="pose_interpolate" pkg="utils_ros" type="pose_interpolate" output="screen"> 
+
+    <param name="dataset_path" value="$(arg dataset_folder)"/>
+    <param name="interpolated_file" value="$(arg interpolated_file)"/>
+
+  </node>
+
+</launch>
+
+
