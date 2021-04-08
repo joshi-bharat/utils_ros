@@ -126,7 +126,7 @@ class ASLtoRosBag():
             self.bag.write(self.imu_topic, imu, header.stamp)
             indx += 1
 
-    def wite_bag(self):
+    def write_bag(self):
         self.write_left_cam()
         if(self.use_stereo):
             self.write_right_cam()
@@ -161,4 +161,4 @@ if __name__ == "__main__":
         use_stereo = rospy.get_param('~use_imu')
 
     bag_writer = ASLtoRosBag(dataset_folder, rosbag_filename)
-    bag_writer.wite_bag()
+    bag_writer.write_bag()

@@ -10,18 +10,16 @@ class EurocDataProvider
 private:
     std::string dataset_path_;
     std::uint64_t frame_id_;
-    
+
     const std::string kLeftCamName = "cam0";
     const std::string kRightCamName = "cam1";
     const std::string kImuName = "imu0";
 
-
 public:
-    EurocDataProvider(const std::string & dataset_path);
+    EurocDataProvider(const std::string &dataset_path);
     ~EurocDataProvider();
 
 public:
-
     std::vector<ImuMeasurement> imu_measurements_;
     CameraImageLists left_cam_image_list_;
     CameraImageLists right_cam_image_list_;
@@ -38,5 +36,5 @@ public:
     bool parseCameraData(const std::string &cam_name,
                          CameraImageLists *cam_list_i);
 
-    bool parseGtData(const std::string& gt_sensor_name);
+    bool parseGtData(const std::string &gt_sensor_name, char separator = ' ', bool whole_dataset = true);
 };
