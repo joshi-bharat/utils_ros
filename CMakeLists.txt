@@ -9,7 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(GTSAM REQUIRED)
 find_package(Eigen3 3 REQUIRED)
-find_package(OpenCV 4 REQUIRED)
+find_package(OpenCV 3 REQUIRED)
 
 catkin_package(
 		INCLUDE_DIRS include
@@ -32,6 +32,12 @@ catkin_install_python(PROGRAMS
   scripts/bag_to_colmap.py
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/bag_to_colmap
 )
+
+catkin_install_python(PROGRAMS
+  scripts/add_camera_info.py 
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/add_camera_info
+)
+
 
 include_directories(
   include

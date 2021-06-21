@@ -13,7 +13,7 @@ import rosbag
 import os
 
 
-class ASLtoRosBag():
+class ASLtoRosBag:
 
     def __init__(self, dataset_path, bagfile, scale=1.0, write_stereo=True, write_imu=True):
         self.dataset_path = os.path.join(dataset_folder, 'mav0')

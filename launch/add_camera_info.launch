@@ -1,0 +1,33 @@
+<launch>
+
+  <!-- Arguments -->
+  <arg name="input_bagfile" value="/home/bjoshi/florida_cave_2021.bag"/>
+  <arg name="output_bagfile" value="/home/bjoshi/florida_cave_2021_w_camera_info.bag"/>
+  
+  <arg name="use_stereo" value="true"/>
+  <arg name="compressed" value="true"/>
+
+  <arg name="left_cam_topic" value="/slave1/image_raw"/>
+  <arg name="left_caminfo_file" value="$(find utils_ros)/config/stereo_rig/left_params.yaml"/>
+  <arg name="right_cam_topic" value="/slave2/image_raw"/>
+  <arg name="right_caminfo_file" value="$(find utils_ros)/config/stereo_rig/right_params.yaml"/>
+
+  <node name="asl_to_rosbag" pkg="utils_ros" type="add_camera_info.py" output="screen"> 
+
+    <param name="input_bagfile" value="$(arg input_bagfile)"/>
+    <param name="output_bagfile" value="$(arg output_bagfile)"/>
+
+    <param name="use_stereo" value="$(arg use_stereo)"/>
+    <param name="compressed" value="$(arg compressed)"/>
+
+    <param name="left_cam_topic" value="$(arg left_cam_topic)"/>
+    <param name="left_caminfo_file" value="$(arg left_caminfo_file)"/>
+    <param name="right_cam_topic" value="$(arg right_cam_topic)"/>
+    <param name="right_caminfo_file" value="$(arg right_caminfo_file)"/>
+
+
+  </node>
+
+  
+
+</launch>
