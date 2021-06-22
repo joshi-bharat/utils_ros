@@ -11,14 +11,30 @@ from sensor_msgs.msg import Image, CameraInfo
 class CamInfoWriter:
 
     def __init__(self, input_file, output_file, left_cam_topic,
-                 left_info_file, right_cam_topic=None, right_info_file=None):
+                 left_info_file, compressed=False, right_cam_topic=None, right_info_file=None):
 
-        # rospy.loginfo(' Processing input bagfile: %s', input_file)
-        # self.inbag = rosbag.Bag(input_file, 'r')
-        # rospy.loginfo(' Writing to output bagfile: %s', output_file)
-        # self.outbag = rosbag.Bag(output_file, 'w')
         self.left_cam_info = self.readCamInfo(left_info_file)
         self.right_cam_info = self.readCamInfo(right_info_file)
+
+        rospy.loginfo("!!!!!!!!!!!!!!! Left Camera Info !!!!!!!!!!!!!!!")
+        print(self.left_cam_info)
+
+        rospy.loginfo("\n!!!!!!!!!!!!!!! Right Camera Info !!!!!!!!!!!!!!!")
+        print(self.right_cam_info)
+
+        rospy.loginfo(' Processing input bagfile: %s', input_file)
+        self.inbag = rosbag.Bag(input_file, 'r')
+        rospy.loginfo(' Writing to output bagfile: %s', output_file)
+        self.outbag = rosbag.Bag(output_file, 'w')
+
+        self.left_cam_topic = left_cam_topic
+        self.right_cam_topic = right_cam_topic
+
+        if compressed:
+            self.left_cam_topic = self.left_cam_topic + '/compressed'
+            self.right_cam_topic = self.right_cam_topic + '/compressed'
+
+        self.writeCameraInfo()
 
     def __del__(self):
         self.inbag.close()
@@ -27,9 +43,34 @@ class CamInfoWriter:
     def readCamInfo(self, cam_info_file):
         rospy.loginfo(
             "Reading camera info params from: {}".format(cam_info_file))
-        with open(cam_info_file) as yaml_stream:
-            calib_data = yaml.load(yaml_stream, Loader=yaml.FullLoader)
-            print(calib_data)
+        yaml_stream = open(cam_info_file)
+        calib_data = yaml.load(yaml_stream, Loader=yaml.FullLoader)
+        cam_info = CameraInfo()
+        cam_info.width = calib_data['image_width']
+        cam_info.height = calib_data['image_height']
+
+        cam_info.distortion_model = calib_data['distortion_model']
+        cam_info.D = calib_data['distortion_coefficients']
+
+        cam_info.K = calib_data['camera_matrix']['data']
+        cam_info.R = calib_data['rectification_matrix']['data']
+        cam_info.P = calib_data['projection_matrix']['data']
+
+        # Some defualt extra params
+        cam_info.binning_x = int(1)
+        cam_info.binning_y = int(1)
+
+        # No need to set roi.x_offset or roi.y_offset. Both default to 0
+        cam_info.roi.height = cam_info.height
+        cam_info.roi.width = cam_info.width
+        cam_info.roi.do_rectify = False
+
+        yaml_stream.close()
+
+        return cam_info
+
+    def writeCameraInfo(self):
+        return 0
 
 
 if __name__ == '__main__':
@@ -78,5 +119,9 @@ if __name__ == '__main__':
     #     param_val = rospy.get_param(param_name)
     #     print('Found param: {} with value: {}'.format(param_name, param_val))
 
+    compressed = False
+    if (rospy.has_param('~compressed')):
+        compressed = rospy.get_param('~compressed')
+
     cam_info_writer = CamInfoWriter(
-        input_file, output_file, left_cam_topic, left_cam_info_file, right_cam_topic, right_cam_info_file)
+        input_file, output_file, left_cam_topic, left_cam_info_file, compressed, right_cam_topic, right_cam_info_file)
