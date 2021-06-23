@@ -6,12 +6,14 @@ import yaml
 import rosbag
 import rospy
 from sensor_msgs.msg import Image, CameraInfo
+from std_msgs.msg import Header
 
 
 class CamInfoWriter:
 
     def __init__(self, input_file, output_file, left_cam_topic,
-                 left_info_file, compressed=False, right_cam_topic=None, right_info_file=None):
+                 left_info_file, compressed=False, right_cam_topic=None, right_info_file=None,
+                 left_cam_frame='', right_cam_frame=''):
 
         self.left_cam_info = self.readCamInfo(left_info_file)
         self.right_cam_info = self.readCamInfo(right_info_file)
@@ -29,10 +31,18 @@ class CamInfoWriter:
 
         self.left_cam_topic = left_cam_topic
         self.right_cam_topic = right_cam_topic
+        self.left_cam_info_topic = self.left_cam_topic + "/camera_info"
+        self.right_cam_info_topic = self.right_cam_topic + "/camera_info"
+
+        self.left_cam_link = left_cam_frame
+        self.right_cam_link = right_cam_frame
 
         if compressed:
             self.left_cam_topic = self.left_cam_topic + '/compressed'
             self.right_cam_topic = self.right_cam_topic + '/compressed'
+
+        self.left_indx = 0
+        self.right_indx = 0
 
         self.writeCameraInfo()
 
@@ -70,7 +80,31 @@ class CamInfoWriter:
         return cam_info
 
     def writeCameraInfo(self):
-        return 0
+        for topic, msg, t in self.inbag.read_messages():
+            if topic == self.left_cam_topic:
+                header = Header()
+                header.seq = self.left_indx
+                header.stamp = msg.header.stamp
+                header.frame_id = self.left_cam_link
+                self.left_cam_info.header = header
+                self.outbag.write(self.left_cam_info_topic,
+                                  self.left_cam_info, header.stamp)
+                self.left_indx += 1
+            elif topic == self.right_cam_topic:
+                header = Header()
+                header.seq = self.right_indx
+                header.stamp = msg.header.stamp
+                header.frame_id = self.right_cam_link
+                self.right_cam_info.header = header
+                self.outbag.write(self.right_cam_info_topic,
+                                  self.right_cam_info, header.stamp)
+                self.right_indx += 1
+
+            self.outbag.write(topic, msg, t)
+
+        rospy.loginfo('Closing output bagfile and exit...')
+        self.outbag.close()
+        self.inbag.close()
 
 
 if __name__ == '__main__':
@@ -102,6 +136,11 @@ if __name__ == '__main__':
     if (rospy.has_param('~use_stereo')):
         use_stereo = rospy.get_param('~use_stereo')
 
+    left_cam_frame = ''
+    right_cam_frame = ''
+    if rospy.has_param('~left_cam_frame'):
+        left_cam_frame = rospy.get_param('~left_cam_frame')
+
     if use_stereo:
         rospy.loginfo("Populating camera info for stereo images...")
         if(not rospy.has_param('~right_cam_topic')):
@@ -111,6 +150,9 @@ if __name__ == '__main__':
         if(not rospy.has_param('~right_caminfo_file')):
             rospy.logfatal("Require right camera info file")
         right_cam_info_file = rospy.get_param('~right_caminfo_file')
+
+        if rospy.has_param('~right_cam_frame'):
+            right_cam_frame = rospy.get_param('~right_cam_frame')
     else:
         rospy.loginfo('Populating camera info for only left image...')
 
@@ -124,4 +166,5 @@ if __name__ == '__main__':
         compressed = rospy.get_param('~compressed')
 
     cam_info_writer = CamInfoWriter(
-        input_file, output_file, left_cam_topic, left_cam_info_file, compressed, right_cam_topic, right_cam_info_file)
+        input_file, output_file, left_cam_topic, left_cam_info_file, compressed, right_cam_topic,
+        right_cam_info_file, left_cam_frame, right_cam_frame)
