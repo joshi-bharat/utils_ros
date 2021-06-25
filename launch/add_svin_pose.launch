@@ -1,0 +1,14 @@
+<launch>
+
+  <!-- Arguments -->
+  <arg name="rosbag_filename" default="/home/bjoshi/cave_new.bag"/>
+  <arg name="svin_result" default="/home/bjoshi/cave/mav0/state_groundtruth_estimate0/data.csv"/>
+  <arg name="is_compressed_image" default="false"/>
+
+  <node name="add_svin_pose" pkg="utils_ros" type="add_svin_pose" output="screen" > 
+    <param name="rosbag_filename" value="$(arg rosbag_filename)"/>
+    <param name="svin_result" value="$(arg svin_result)"/>
+    <param name="is_compressed_image" value="$(arg is_compressed_image)"/>
+  </node>
+
+</launch>
