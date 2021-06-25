@@ -1,7 +1,7 @@
 <launch>
 
   <!-- Arguments -->
-  <arg name="image_dir" value="/home/bjoshi/colmap_stereo"/>
+  <arg name="image_dir" value="/home/bjoshi/colmap_cave_stereo"/>
   <arg name="scale" value="0.5"/>
   <arg name="img_freq" value="2"/>
   <!-- <arg name="bag_file" value="/home/bjoshi/Downloads/cave_loop_w_cam_info.bag"/> -->
@@ -24,11 +24,10 @@
   <!-- </node> -->
 
   
-  <node name="bag_to_colmap" pkg="utils_ros" type="bag_to_colmap.py" output="screen"> 
+  <node name="colmap_stereo" pkg="utils_ros" type="colmap_stereo.py" output="screen"> 
 
     <remap from="/camera0" to="/slave1/image_raw"/> 
     <remap from="/camera1" to="/slave2/image_raw"/> 
-    <remap from="/imu" to="/imu/imu" />
 
     <param name="image_dir" value="$(arg image_dir)"/>
     <param name="scale" value="$(arg scale)"/>

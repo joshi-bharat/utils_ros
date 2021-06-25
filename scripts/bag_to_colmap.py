@@ -42,7 +42,7 @@ class ASLConverter:
         size = (new_w, new_h)
         cur_time = img_msg.header.stamp.to_sec()
     
-        if(cur_time - self.last_timestamp) >= delay:
+        if(cur_time - self.last_timestamp) >= self.delay:
             cv_image = self.bridge.imgmsg_to_cv2(
                 img_msg, desired_encoding='passthrough')
             if self.scale != 1.0:
@@ -73,6 +73,7 @@ if __name__ == '__main__':
         freq = rospy.get_param('~img_freq')
     
     delay = 1.0/freq
+    rospy.loginfo("Delay : {}".format(delay))
     asl_converter = ASLConverter(image_folder, delay, scale=scale)
 
     while not rospy.is_shutdown():
