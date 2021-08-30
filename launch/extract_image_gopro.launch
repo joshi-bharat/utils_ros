@@ -1,0 +1,30 @@
+<launch>
+
+  <!-- Arguments -->
+  <arg name="image_dir" value="/home/bjoshi/gopro1_gennie_08_20_2021"/>
+  <arg name="scale" value="0.5"/>
+  <arg name="write_every_nsecs" value="0.5"/>
+  <arg name="compressed" value="true"/>
+  <arg name="bag" value="/home/bjoshi/Downloads/gopro1_gennie_08_20_2021.bag"/>
+  <arg name="stereo" value="false"/>
+
+  <arg name="left" value="/gopro/image_raw"/>
+  <arg name="right" value=""/>
+
+  <node name="gopro" pkg="utils_ros" type="extract_images.py" output="screen" required="true">
+
+    <param name="image_dir" value="$(arg image_dir)"/>
+    <param name="write_every_nsecs" value="$(arg write_every_nsecs)"/>
+    <param name="bag" value="$(arg bag)"/>
+
+    <param name="left" value="$(arg left)"/>
+    <param name="right" value="$(arg right)"/>
+    <param name="stereo" value="$(arg stereo)"/>
+    <param name="compressed" value="$(arg compressed)"/>
+    <param name="scale" value="$(arg scale)"/>
+
+  </node>
+
+</launch>
+
+
