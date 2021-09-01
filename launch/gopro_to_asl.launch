@@ -1,0 +1,26 @@
+<launch>
+
+  <!-- Arguments -->
+  <arg name="dataset_path" value="/media/bjoshi/data/asl"/>
+  <arg name="image_topic" value="/gopro/image_raw/compressed"/>
+  <arg name="imu_topic" value="/gopro/imu"/>
+  <arg name="bag" value="/media/bjoshi/data/gopro_bags/gopro1_gennie_08_20_2021.bag"/>
+  <arg name="start_time" value="90"/>
+  <arg name="end_time" value="1549"/>
+
+  <node name="gopro" pkg="utils_ros" type="goprobag_to_asl.py" output="screen" required="true">
+
+    <param name="dataset_path" value="$(arg dataset_path)"/>
+    <param name="bag" value="$(arg bag)"/>
+
+    <param name="image_topic" value="$(arg image_topic)"/>
+    <param name="imu_topic" value="$(arg imu_topic)"/>
+
+    <param name="start_time" value="$(arg start_time)"/>
+    <param name="end_time" value="$(arg end_time)"/>
+
+  </node>
+
+</launch>
+
+
