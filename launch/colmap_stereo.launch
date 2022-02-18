@@ -14,20 +14,11 @@
   <node name="republish1" type="republish" pkg="image_transport" output="screen" args="compressed in:=/slave1/image_raw raw out:=/slave1/image_raw" />
   <node name="republish2" type="republish" pkg="image_transport" output="screen" args="compressed in:=/slave2/image_raw raw out:=/slave2/image_raw" />
 
-  <!-- Run the stereo image proc --> 
-  <!-- <node pkg="stereo_image_proc" type="stereo_image_proc" name="stereo_image_proc" > -->
-    <!-- <remap from="/left/image_raw" to="/slave1/image_raw" /> -->
-    <!-- <remap from="/right/image_raw" to="/slave2/image_raw" /> -->
-    <!-- <remap from="/left/camera_info" to="/slave1/image_raw/cam_info" /> -->
-    <!-- <remap from="/right/camera_info" to="/slave2/image_raw/cam_info" /> -->
-    <!-- <param name="approximate_sync" value="true"/> -->
-  <!-- </node> -->
 
-  
-  <node name="colmap_stereo" pkg="utils_ros" type="colmap_stereo.py" output="screen"> 
+  <node name="colmap_stereo" pkg="utils_ros" type="colmap_stereo.py" output="screen">
 
-    <remap from="/camera0" to="/slave1/image_raw"/> 
-    <remap from="/camera1" to="/slave2/image_raw"/> 
+    <remap from="/camera0" to="/slave1/image_raw"/>
+    <remap from="/camera1" to="/slave2/image_raw"/>
 
     <param name="image_dir" value="$(arg image_dir)"/>
     <param name="scale" value="$(arg scale)"/>

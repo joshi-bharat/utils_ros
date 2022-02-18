@@ -3,7 +3,7 @@
   <!-- Arguments -->
   <arg name="input_bagfile" value="/home/bjoshi/florida_cave_2021.bag"/>
   <arg name="output_bagfile" value="/home/bjoshi/florida_cave_2021_w_camera_info.bag"/>
-  
+
   <arg name="use_stereo" value="true"/>
   <arg name="compressed" value="true"/>
 
@@ -15,7 +15,7 @@
   <arg name="right_caminfo_file" value="$(find utils_ros)/config/stereo_rig/right_params_800x600.yaml"/>
   <arg name="right_cam_frame" value="slave2"/>
 
-  <node name="asl_to_rosbag" pkg="utils_ros" type="add_camera_info.py" output="screen"> 
+  <node name="asl_to_rosbag" pkg="utils_ros" type="add_camera_info.py" output="screen">
 
     <param name="input_bagfile" value="$(arg input_bagfile)"/>
     <param name="output_bagfile" value="$(arg output_bagfile)"/>
@@ -33,6 +33,6 @@
 
   </node>
 
-  
+
 
 </launch>

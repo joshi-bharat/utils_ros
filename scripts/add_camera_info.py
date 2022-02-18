@@ -1,28 +1,30 @@
 #!/usr/bin/python
 
-
 import yaml
 
 import rosbag
 import rospy
 from sensor_msgs.msg import Image, CameraInfo
 from std_msgs.msg import Header
+from tqdm import tqdm
 
 
 class CamInfoWriter:
-
-    def __init__(self, input_file, output_file, left_cam_topic,
-                 left_info_file, compressed=False, right_cam_topic=None, right_info_file=None,
-                 left_cam_frame='', right_cam_frame=''):
+    def __init__(self,
+                 input_file,
+                 output_file,
+                 left_cam_topic,
+                 left_info_file,
+                 compressed=False,
+                 right_cam_topic=None,
+                 right_info_file=None,
+                 left_cam_frame='',
+                 right_cam_frame='',
+                 is_stereo=False):
 
         self.left_cam_info = self.readCamInfo(left_info_file)
-        self.right_cam_info = self.readCamInfo(right_info_file)
-
         rospy.loginfo("!!!!!!!!!!!!!!! Left Camera Info !!!!!!!!!!!!!!!")
         print(self.left_cam_info)
-
-        rospy.loginfo("\n!!!!!!!!!!!!!!! Right Camera Info !!!!!!!!!!!!!!!")
-        print(self.right_cam_info)
 
         rospy.loginfo(' Processing input bagfile: %s', input_file)
         self.inbag = rosbag.Bag(input_file, 'r')
@@ -30,20 +32,25 @@ class CamInfoWriter:
         self.outbag = rosbag.Bag(output_file, 'w')
 
         self.left_cam_topic = left_cam_topic
-        self.right_cam_topic = right_cam_topic
-        self.left_cam_info_topic = self.left_cam_topic + "/camera_info"
-        self.right_cam_info_topic = self.right_cam_topic + "/camera_info"
-
         self.left_cam_link = left_cam_frame
-        self.right_cam_link = right_cam_frame
+        self.left_cam_info_topic = "/" + self.left_cam_link + "/camera_info"
+
+        if is_stereo:
+            self.right_cam_info = self.readCamInfo(right_info_file)
+            rospy.loginfo(
+                "\n!!!!!!!!!!!!!!! Right Camera Info !!!!!!!!!!!!!!!")
+            print(self.right_cam_info)
+            self.right_cam_topic = right_cam_topic
+            self.right_cam_link = right_cam_frame
+            self.right_cam_info_topic = "/" + self.right_cam_link + "/camera_info"
+            if compressed:
+                self.right_cam_topic = self.right_cam_topic + '/compressed'
+            self.right_indx = 0
 
         if compressed:
             self.left_cam_topic = self.left_cam_topic + '/compressed'
-            self.right_cam_topic = self.right_cam_topic + '/compressed'
-
         self.left_indx = 0
-        self.right_indx = 0
-
+        self.stereo = is_stereo
         self.writeCameraInfo()
 
     def __del__(self):
@@ -80,17 +87,18 @@ class CamInfoWriter:
         return cam_info
 
     def writeCameraInfo(self):
-        for topic, msg, t in self.inbag.read_messages():
+        for topic, msg, t in tqdm(self.inbag.read_messages(),
+                                  total=self.inbag.get_message_count()):
             if topic == self.left_cam_topic:
                 header = Header()
                 header.seq = self.left_indx
                 header.stamp = msg.header.stamp
                 header.frame_id = self.left_cam_link
                 self.left_cam_info.header = header
-                self.outbag.write(self.left_cam_info_topic,
-                                  self.left_cam_info, header.stamp)
+                self.outbag.write(self.left_cam_info_topic, self.left_cam_info,
+                                  header.stamp)
                 self.left_indx += 1
-            elif topic == self.right_cam_topic:
+            elif self.stereo and topic == self.right_cam_topic:
                 header = Header()
                 header.seq = self.right_indx
                 header.stamp = msg.header.stamp
@@ -100,7 +108,10 @@ class CamInfoWriter:
                                   self.right_cam_info, header.stamp)
                 self.right_indx += 1
 
-            self.outbag.write(topic, msg, t)
+            if topic not in [
+                    self.left_cam_info_topic, self.right_cam_info_topic
+            ]:  # rospy.logerr("Error writing to bagfile: {}".format(e))
+                self.outbag.write(topic, msg, t)
 
         rospy.loginfo('Closing output bagfile and exit...')
         self.outbag.close()
@@ -112,8 +123,7 @@ if __name__ == '__main__':
     rospy.init_node('add_cam_info', anonymous=True)
 
     if (not rospy.has_param('~input_bagfile')):
-        rospy.logfatal(
-            "Require the input bag file with camera message")
+        rospy.logfatal("Require the input bag file with camera message")
         dataset_folder = rospy.get_param('~dataset_path')
     input_file = rospy.get_param('~input_bagfile')
 
@@ -121,11 +131,11 @@ if __name__ == '__main__':
         rospy.logfatal("Require the bagfile to be written")
     output_file = rospy.get_param('~output_bagfile')
 
-    if(not rospy.has_param('~left_cam_topic')):
+    if (not rospy.has_param('~left_cam_topic')):
         rospy.logfatal("Require left camera topic to populate cam info")
     left_cam_topic = rospy.get_param('~left_cam_topic')
 
-    if(not rospy.has_param('~left_caminfo_file')):
+    if (not rospy.has_param('~left_caminfo_file')):
         rospy.logfatal("Require left camera info file")
     left_cam_info_file = rospy.get_param('~left_caminfo_file')
 
@@ -143,11 +153,11 @@ if __name__ == '__main__':
 
     if use_stereo:
         rospy.loginfo("Populating camera info for stereo images...")
-        if(not rospy.has_param('~right_cam_topic')):
+        if (not rospy.has_param('~right_cam_topic')):
             rospy.logfatal("Require right camera topic to populate cam info")
         right_cam_topic = rospy.get_param('~right_cam_topic')
 
-        if(not rospy.has_param('~right_caminfo_file')):
+        if (not rospy.has_param('~right_caminfo_file')):
             rospy.logfatal("Require right camera info file")
         right_cam_info_file = rospy.get_param('~right_caminfo_file')
 
@@ -165,6 +175,8 @@ if __name__ == '__main__':
     if (rospy.has_param('~compressed')):
         compressed = rospy.get_param('~compressed')
 
-    cam_info_writer = CamInfoWriter(
-        input_file, output_file, left_cam_topic, left_cam_info_file, compressed, right_cam_topic,
-        right_cam_info_file, left_cam_frame, right_cam_frame)
+    cam_info_writer = CamInfoWriter(input_file, output_file, left_cam_topic,
+                                    left_cam_info_file, compressed,
+                                    right_cam_topic, right_cam_info_file,
+                                    left_cam_frame, right_cam_frame,
+                                    use_stereo)

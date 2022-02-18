@@ -19,6 +19,9 @@
   <depend>imagenex831l</depend>
   <depend>message_generation</depend>
   <depend>message_runtime</depend>
+  <depend>ar_track_alvar</depend>
+  <depend>camera_info_manager</depend>
+
   
   <exec_depend>rospy</exec_depend>
 

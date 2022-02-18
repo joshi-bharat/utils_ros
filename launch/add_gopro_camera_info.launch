@@ -1,0 +1,31 @@
+<launch>
+
+  <!-- Arguments -->
+  <arg name="input_bagfile" value="/media/bjoshi/data/gopro_bags/gopro2_gennie_08_21_2021.bag"/>
+  <arg name="output_bagfile" value="/media/bjoshi/data/gopro_bags/gopro2_gennie_cavern_3.bag"/>
+  
+  <arg name="use_stereo" value="false"/>
+  <arg name="compressed" value="true"/>
+
+  <arg name="left_cam_topic" value="/gopro/image_raw"/>
+  <arg name="left_caminfo_file" value="$(find utils_ros)/config/gopro/gopro2_params.yaml"/>
+  <arg name="left_cam_frame" value="gopro"/>
+
+  <node name="asl_to_rosbag" pkg="utils_ros" type="add_camera_info.py" output="screen" required="true"> 
+
+    <param name="input_bagfile" value="$(arg input_bagfile)"/>
+    <param name="output_bagfile" value="$(arg output_bagfile)"/>
+
+    <param name="use_stereo" value="$(arg use_stereo)"/>
+    <param name="compressed" value="$(arg compressed)"/>
+
+    <param name="left_cam_topic" value="$(arg left_cam_topic)"/>
+    <param name="left_caminfo_file" value="$(arg left_caminfo_file)"/>
+    <param name="left_cam_frame" value="$(arg left_cam_frame)"/>
+
+
+  </node>
+
+  
+
+</launch>

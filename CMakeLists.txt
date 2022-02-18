@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 find_package(catkin REQUIRED COMPONENTS 
             sensor_msgs cv_bridge roscpp rosbag message_filters
-            image_transport imagenex831l)
+            image_transport imagenex831l ar_track_alvar camera_info_manager)
 
 find_package(GTSAM REQUIRED)
 find_package(Eigen3 3 REQUIRED)
@@ -13,29 +13,29 @@ find_package(OpenCV 3 REQUIRED)
 
 catkin_package(
 		INCLUDE_DIRS include
-		CATKIN_DEPENDS sensor_msgs cv_bridge roscpp rosbag message_filters image_transport 
+		CATKIN_DEPENDS sensor_msgs cv_bridge roscpp rosbag message_filters image_transport ar_track_alvar camera_info_manager
     imagenex831l
 		LIBRARIES ${PROJECT_NAME}
 )
 # do not wildcard install files since the root folder of the package will contain a debian folder for releasing
 catkin_install_python(PROGRAMS
   scripts/bag_to_asl.py
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/bag_to_asl
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 catkin_install_python(PROGRAMS
   scripts/asl_to_rosbag.py
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/asl_to_rosbag
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 catkin_install_python(PROGRAMS
   scripts/bag_to_colmap.py
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/bag_to_colmap
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 catkin_install_python(PROGRAMS
   scripts/add_camera_info.py 
-    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/add_camera_info
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 

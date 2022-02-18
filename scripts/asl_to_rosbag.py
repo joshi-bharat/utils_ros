@@ -1,6 +1,5 @@
 #!/usr/bin/python2
 
-
 from tqdm import tqdm
 import glob
 import cv2
@@ -14,8 +13,12 @@ import os
 
 
 class ASLtoRosBag:
-
-    def __init__(self, dataset_path, bagfile, scale=1.0, write_stereo=True, write_imu=True):
+    def __init__(self,
+                 dataset_path,
+                 bagfile,
+                 scale=1.0,
+                 write_stereo=True,
+                 write_imu=True):
         self.dataset_path = os.path.join(dataset_folder, 'mav0')
         self.bag = rosbag.Bag(bagfile, 'w')
 
@@ -36,13 +39,13 @@ class ASLtoRosBag:
         rospy.loginfo("Writing left camera msg to bag file")
         cam0_folder = os.path.join(self.dataset_path, "cam0", "data")
         indx = 0
-        files = glob.glob(cam0_folder+"/*")
+        files = glob.glob(cam0_folder + "/*")
         files = sorted(files)
 
         for file in tqdm(files):
             stamp = os.path.split(file)[1].split('.')[0]
             secs = int(float(stamp) * 1e-9)
-            n_secs = int(float(stamp) - secs*1e9)
+            n_secs = int(float(stamp) - secs * 1e9)
 
             ros_time = rospy.Time(secs, n_secs)
 
@@ -64,12 +67,12 @@ class ASLtoRosBag:
         rospy.loginfo("Writing right camera msg to bag file")
         cam1_folder = os.path.join(self.dataset_path, "cam1", "data")
         indx = 0
-        files = glob.glob(cam1_folder+"/*")
+        files = glob.glob(cam1_folder + "/*")
         files = sorted(files)
         for file in tqdm(files):
             stamp = os.path.split(file)[1].split('.')[0]
             secs = int(float(stamp) * 1e-9)
-            n_secs = int(float(stamp) - secs*1e9)
+            n_secs = int(float(stamp) - secs * 1e9)
 
             ros_time = rospy.Time(secs, n_secs)
 
@@ -100,7 +103,7 @@ class ASLtoRosBag:
             line_arr = line.split(',')
             stamp = line_arr[0]
             secs = int(float(stamp) * 1e-9)
-            n_secs = int(float(stamp) - secs*1e9)
+            n_secs = int(float(stamp) - secs * 1e9)
             ros_time = rospy.Time(secs, n_secs)
 
             header = Header()
@@ -128,9 +131,9 @@ class ASLtoRosBag:
 
     def write_bag(self):
         self.write_left_cam()
-        if(self.use_stereo):
+        if (self.use_stereo):
             self.write_right_cam()
-        if(self.use_imu):
+        if (self.use_imu):
             self.write_imu_msg()
         self.finished = True
 
