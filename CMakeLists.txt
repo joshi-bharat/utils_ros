@@ -5,15 +5,16 @@ set(CMAKE_CXX_STANDARD 14)
 
 find_package(catkin REQUIRED COMPONENTS 
             sensor_msgs cv_bridge roscpp rosbag message_filters
-            image_transport imagenex831l ar_track_alvar camera_info_manager)
+            image_transport imagenex831l camera_info_manager)
 
 find_package(GTSAM REQUIRED)
-find_package(Eigen3 3 REQUIRED)
-find_package(OpenCV 3 REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(OpenCV  REQUIRED)
+find_package(PCL REQUIRED)
 
 catkin_package(
 		INCLUDE_DIRS include
-		CATKIN_DEPENDS sensor_msgs cv_bridge roscpp rosbag message_filters image_transport ar_track_alvar camera_info_manager
+		CATKIN_DEPENDS sensor_msgs cv_bridge roscpp rosbag message_filters image_transport camera_info_manager
     imagenex831l
 		LIBRARIES ${PROJECT_NAME}
 )
@@ -45,13 +46,17 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
   ${GTSAM_INCLUDE_DIR}
   ${OpenCV_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
+
 )
 
 add_library(rosdata_utils 
             src/EurocDataProvider.cpp 
             src/Definitions.cpp
             src/BagWriter.cpp
-            src/BagSync.cpp)
+            src/BagSync.cpp
+            src/Utils.cpp
+            src/PoseInterpolator.cpp)
 
 target_link_libraries(rosdata_utils 
                       ${catkin_LIBRARIES}
@@ -71,3 +76,9 @@ target_link_libraries(add_svin_pose rosdata_utils)
 
 add_executable(add_sonar src/add_sonar.cpp)
 target_link_libraries(add_sonar rosdata_utils)
+
+add_executable(interpolate_trajectories src/interpolate_trajectories.cpp)
+target_link_libraries(interpolate_trajectories rosdata_utils)
+
+add_executable(traj_to_pointcloud src/traj_to_pcl.cpp)
+target_link_libraries(traj_to_pointcloud ${catkin_LIBRARIES} ${PCL_LIBRARIES})

@@ -2,7 +2,7 @@
 
 #include <ros/console.h>
 
-#include <BagSync.h>
+#include "BagSync.h"
 
 BagSync::BagSync() : nh_private_("~"),
                      nh_()

@@ -24,10 +24,10 @@ void EurocDataProvider::parse()
     ROS_INFO_STREAM("Using dataset path: " << dataset_path_);
     ROS_INFO_STREAM("Parsing IMU Data\n");
 
-    //Parse IMU Data
+    // Parse IMU Data
     bool imu_parsed = parseImuData(dataset_path_, kImuName);
 
-    //Parse Camera Data
+    // Parse Camera Data
     parseLeftCam();
     parseRightCam();
 }
@@ -87,6 +87,7 @@ bool EurocDataProvider::parseLeftCam()
     ROS_INFO_STREAM("Parsing Left Camera Data\n");
     parseCameraData(kLeftCamName, &left_cam_image_list_);
     left_cam_image_list_.print();
+    return true;
 }
 
 bool EurocDataProvider::parseRightCam()
@@ -94,6 +95,7 @@ bool EurocDataProvider::parseRightCam()
     ROS_INFO_STREAM("Parsing Right Camera Data\n");
     parseCameraData(kRightCamName, &right_cam_image_list_);
     right_cam_image_list_.print();
+    return true;
 }
 
 bool EurocDataProvider::parseCameraData(const std::string &cam_name,
@@ -171,4 +173,6 @@ bool EurocDataProvider::parseGtData(const std::string &gt_sensor_name, char sepa
 
         ground_truth_.insert(std::make_pair(timestamp, pose));
     }
+
+    return true;
 }

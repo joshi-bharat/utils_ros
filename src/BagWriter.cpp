@@ -106,6 +106,8 @@ bool BagWriter::writeImuMsg(const std::string &imu_topic, const std::vector<ImuM
 
         bag_.write(imu_topic, ros_time, imu_msg);
     }
+
+    return true;
 }
 
 bool BagWriter::writeGTPose(const std::string &gt_topic,
@@ -155,7 +157,7 @@ bool BagWriter::writeGTPose(const std::string &gt_topic,
             auto itr_low = gt_data.equal_range(stamp).first;
             if (itr_low == gt_data.begin() || stamp == itr_low->first)
             {
-                //Ground truth does not have lower timestamp or matches exactly
+                // Ground truth does not have lower timestamp or matches exactly
                 const gtsam::Point3 &trans = itr_low->second.translation();
                 const gtsam::Quaternion &quat = itr_low->second.rotation().toQuaternion();
 
@@ -169,7 +171,7 @@ bool BagWriter::writeGTPose(const std::string &gt_topic,
             }
             else
             {
-                //Interpolate
+                // Interpolate
 
                 Timestamp upper = itr_low->first;
                 gtsam::Pose3 upper_pose = itr_low->second;
@@ -197,10 +199,10 @@ bool BagWriter::writeGTPose(const std::string &gt_topic,
 
                 // ROS_WARN_STREAM("Calculating pose at stamp: " << stamp << " between stamps: " << lower << " and " << upper);
 
-                // utils::printTf2Quat(tf2_quat_low, "Lower: ");
-                // utils::printTf2Quat(tf2_quat_up, "Upper: ");
+                // Utils::printTf2Quat(tf2_quat_low, "Lower: ");
+                // Utils::printTf2Quat(tf2_quat_up, "Upper: ");
                 // std::cout << "Ratio: " << ratio << "\n";
-                // utils::printTf2Quat(quat, "Result: ");
+                // Utils::printTf2Quat(quat, "Result: ");
 
                 // std::cout << "Lower: " << trans_lower << "\n" <<
                 //   "Upper: " << trans_upper << "\n" <<
@@ -242,6 +244,8 @@ bool BagWriter::writeGTPose(const std::string &gt_topic,
             bag_.write("/svin2/gt_path", ros_time, path_msg);
         }
     }
+
+    return true;
 }
 
 bool BagWriter::writeGTPose(const std::string &gt_topic,
@@ -286,7 +290,7 @@ bool BagWriter::writeGTPose(const std::string &gt_topic,
 
             auto itr_low = gt_data.equal_range(stamp).first;
 
-            //Interpolate
+            // Interpolate
 
             Timestamp upper = itr_low->first;
             gtsam::Pose3 upper_pose = itr_low->second;
@@ -314,10 +318,10 @@ bool BagWriter::writeGTPose(const std::string &gt_topic,
 
             // ROS_WARN_STREAM("Calculating pose at stamp: " << stamp << " between stamps: " << lower << " and " << upper);
 
-            // utils::printTf2Quat(tf2_quat_low, "Lower: ");
-            // utils::printTf2Quat(tf2_quat_up, "Upper: ");
+            // Utils::printTf2Quat(tf2_quat_low, "Lower: ");
+            // Utils::printTf2Quat(tf2_quat_up, "Upper: ");
             // std::cout << "Ratio: " << ratio << "\n";
-            // utils::printTf2Quat(quat, "Result: ");
+            // Utils::printTf2Quat(quat, "Result: ");
 
             // std::cout << "Lower: " << trans_lower << "\n" <<
             //   "Upper: " << trans_upper << "\n" <<
@@ -374,4 +378,6 @@ bool BagWriter::writeGTPose(const std::string &gt_topic,
             bag_.write("/svin2/gt_path", ros_time, path_msg);
         }
     }
+
+    return true;
 }
