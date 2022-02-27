@@ -77,24 +77,23 @@ class ImageExtractor():
         cv2.imwrite(filename, cv_image)
 
     def extract_images(self, delay: float = 0.0):
-        start_time = self.bag.get_start_time() + 90
+        start_time = self.bag.get_start_time()
         previous_stamp = self.bag.get_start_time()
 
         print("topics: {}".format(self.img_topics))
         for topic, msg, t in tqdm(self.bag.read_messages(),
                                   total=self.bag.get_message_count()):
             if topic in self.img_topics:
+                if t.to_sec() < start_time:
+                    continue
+                if t.to_sec() - previous_stamp < delay:
+                    continue
                 if self.stereo:
                     self.filters[self.img_topics.index(topic)].signalMessage(
                         msg)
                 else:
-                    if t.to_sec() < start_time:
-                        continue
-
-                    if t.to_sec() - previous_stamp < delay:
-                        continue
-                    previous_stamp = t.to_sec()
                     self.save_image(msg, self.img_dir)
+                previous_stamp = t.to_sec()
 
     def write_stereo_images(self, left_msg, right_msg):
         # Matches timestamps in left and right messages
