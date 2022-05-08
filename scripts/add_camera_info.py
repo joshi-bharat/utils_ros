@@ -51,6 +51,7 @@ class CamInfoWriter:
             self.left_cam_topic = self.left_cam_topic + '/compressed'
         self.left_indx = 0
         self.stereo = is_stereo
+        self.other_topics = ["/imu/imu", "/imu/magnetic_field", "/imu/temp",]
         self.writeCameraInfo()
 
     def __del__(self):
@@ -97,6 +98,7 @@ class CamInfoWriter:
                 self.left_cam_info.header = header
                 self.outbag.write(self.left_cam_info_topic, self.left_cam_info,
                                   header.stamp)
+                self.outbag.write(topic, msg, header.stamp)
                 self.left_indx += 1
             elif self.stereo and topic == self.right_cam_topic:
                 header = Header()
@@ -106,12 +108,14 @@ class CamInfoWriter:
                 self.right_cam_info.header = header
                 self.outbag.write(self.right_cam_info_topic,
                                   self.right_cam_info, header.stamp)
-                self.right_indx += 1
+                self.outbag.write(topic, msg, header.stamp)
 
-            if topic not in [
+                self.right_indx += 1
+                
+            elif topic not in [
                     self.left_cam_info_topic, self.right_cam_info_topic
-            ]:  # rospy.logerr("Error writing to bagfile: {}".format(e))
-                self.outbag.write(topic, msg, t)
+            ] and topic in self.other_topics:
+                self.outbag.write(topic, msg, msg.header.stamp)
 
         rospy.loginfo('Closing output bagfile and exit...')
         self.outbag.close()

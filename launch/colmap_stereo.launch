@@ -1,9 +1,10 @@
 <launch>
 
   <!-- Arguments -->
-  <arg name="image_dir" value="/home/bjoshi/colmap_cave_stereo"/>
-  <arg name="scale" value="0.5"/>
-  <arg name="img_freq" value="2"/>
+  <arg name="image_dir" value="/home/bjoshi/colmap/test"/>
+  <arg name="scale" value="1.0"/>
+  <arg name="img_freq" value="20"/>
+  <arg name="config_file" value="$(find utils_ros)/config/stereo_rig/shipwreck.yaml"/>
   <!-- <arg name="bag_file" value="/home/bjoshi/Downloads/cave_loop_w_cam_info.bag"/> -->
 
   <param name="/use_sim_time" value="true"/>
@@ -23,6 +24,7 @@
     <param name="image_dir" value="$(arg image_dir)"/>
     <param name="scale" value="$(arg scale)"/>
     <param name="img_freq" value="$(arg img_freq)"/>
+    <param name="config_file" value="$(arg config_file)"/>
 
   </node>
 

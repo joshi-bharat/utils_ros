@@ -1,18 +1,18 @@
 <launch>
 
   <!-- Arguments -->
-  <arg name="input_bagfile" value="/home/bjoshi/florida_cave_2021.bag"/>
-  <arg name="output_bagfile" value="/home/bjoshi/florida_cave_2021_w_camera_info.bag"/>
+  <arg name="input_bagfile" value="/home/bjoshi/Downloads/stereorig_shipwreck.bag"/>
+  <arg name="output_bagfile" value="/home/bjoshi/Downloads/stereorig_shipwreck_caminfo.bag"/>
 
   <arg name="use_stereo" value="true"/>
   <arg name="compressed" value="true"/>
 
   <arg name="left_cam_topic" value="/slave1/image_raw"/>
-  <arg name="left_caminfo_file" value="$(find utils_ros)/config/stereo_rig/left_params_800x600.yaml"/>
+  <arg name="left_caminfo_file" value="$(find utils_ros)/config/stereo_rig/left_params_800x600_cropped.yaml"/>
   <arg name="left_cam_frame" value="slave1"/>
 
   <arg name="right_cam_topic" value="/slave2/image_raw"/>
-  <arg name="right_caminfo_file" value="$(find utils_ros)/config/stereo_rig/right_params_800x600.yaml"/>
+  <arg name="right_caminfo_file" value="$(find utils_ros)/config/stereo_rig/right_params_800x600_cropped.yaml"/>
   <arg name="right_cam_frame" value="slave2"/>
 
   <node name="asl_to_rosbag" pkg="utils_ros" type="add_camera_info.py" output="screen">

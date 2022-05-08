@@ -56,7 +56,8 @@ add_library(rosdata_utils
             src/BagWriter.cpp
             src/BagSync.cpp
             src/Utils.cpp
-            src/PoseInterpolator.cpp)
+            src/PoseInterpolator.cpp
+            src/Trajectory.cpp)
 
 target_link_libraries(rosdata_utils 
                       ${catkin_LIBRARIES}
@@ -82,3 +83,6 @@ target_link_libraries(interpolate_trajectories rosdata_utils)
 
 add_executable(traj_to_pointcloud src/traj_to_pcl.cpp)
 target_link_libraries(traj_to_pointcloud ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(write_kf_images src/write_keyframe_image.cpp)
+target_link_libraries(write_kf_images rosdata_utils -lstdc++fs)
