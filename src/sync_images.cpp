@@ -1,12 +1,12 @@
-#include <BagSync.h>
+#include "StereoSyncOnline.h"
 
 #include <ros/ros.h>
 
 int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "sync_images");
+    ros::init(argc, argv, "sync_images_online");
 
-    std::unique_ptr<BagSync> bag_sync = std::make_unique<BagSync>();
+    std::unique_ptr<StereoSyncOnline> stereo_sync = std::make_unique<StereoSyncOnline>();
 
     while (ros::ok())
     {

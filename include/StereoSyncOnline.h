@@ -1,4 +1,5 @@
-#pragma once
+#ifndef STEROSYNCONLINE_H
+#define STEROSYNCONLINE_H
 
 #include <imagenex831l/ProcessedRange.h>
 
@@ -15,17 +16,16 @@
 
 #include <opencv2/opencv.hpp>
 
-class BagSync
+class StereoSyncOnline
 {
 public:
-    BagSync();
-    ~BagSync();
+    StereoSyncOnline();
+    ~StereoSyncOnline();
 
 public:
     void callbackIMU(const sensor_msgs::ImuConstPtr &imu_msg);
     void callbackStereoImages(const sensor_msgs::ImageConstPtr &left_msg,
                               const sensor_msgs::ImageConstPtr &right_msg);
-    const cv::Mat readRosImage(const sensor_msgs::ImageConstPtr &img_msg) const;
     void callbackSonar(const imagenex831l::ProcessedRange::ConstPtr &sonar_msg);
 
 private:
@@ -59,3 +59,5 @@ private:
 
     rosbag::Bag bag_;
 };
+
+#endif // STEROSYNCONLINE_H

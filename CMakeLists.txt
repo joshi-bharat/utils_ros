@@ -54,10 +54,10 @@ add_library(rosdata_utils
             src/EurocDataProvider.cpp 
             src/Definitions.cpp
             src/BagWriter.cpp
-            src/BagSync.cpp
             src/Utils.cpp
             src/PoseInterpolator.cpp
-            src/Trajectory.cpp)
+            src/Trajectory.cpp
+            src/StereoSyncOnline.cpp)
 
 target_link_libraries(rosdata_utils 
                       ${catkin_LIBRARIES}
@@ -86,3 +86,6 @@ target_link_libraries(traj_to_pointcloud ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 add_executable(write_kf_images src/write_keyframe_image.cpp)
 target_link_libraries(write_kf_images rosdata_utils -lstdc++fs)
+
+add_executable(extract_bag src/BagSync.cpp)
+target_link_libraries(extract_bag rosdata_utils -lstdc++fs)

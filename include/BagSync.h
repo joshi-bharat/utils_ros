@@ -14,6 +14,19 @@
 #include <sensor_msgs/Imu.h>
 
 #include <opencv2/opencv.hpp>
+/**
+ * Inherits from message_filters::SimpleFilter<M>
+ * to use protected signalMessage function
+ */
+template <class M>
+class BagSubscriber : public message_filters::SimpleFilter<M>
+{
+public:
+    void newMessage(const boost::shared_ptr<M const> &msg)
+    {
+        this->signalMessage(msg);
+    }
+};
 
 class BagSync
 {
@@ -22,40 +35,27 @@ public:
     ~BagSync();
 
 public:
-    void callbackIMU(const sensor_msgs::ImuConstPtr &imu_msg);
-    void callbackStereoImages(const sensor_msgs::ImageConstPtr &left_msg,
-                              const sensor_msgs::ImageConstPtr &right_msg);
-    const cv::Mat readRosImage(const sensor_msgs::ImageConstPtr &img_msg) const;
-    void callbackSonar(const imagenex831l::ProcessedRange::ConstPtr &sonar_msg);
+    void extractImages();
+    void imageCallback(const sensor_msgs::ImageConstPtr &left_img_msg,
+                       const sensor_msgs::ImageConstPtr &right_img_msg);
+    void compressedImageCallback(const sensor_msgs::CompressedImageConstPtr &left_img_msg,
+                                 const sensor_msgs::CompressedImageConstPtr &right_img_msg);
 
 private:
     std::string left_img_topic_ = "/cam0/image_raw";
     std::string right_img_topic_ = "/cam1/image_raw";
     std::string imu_topic_ = "/imu0";
-    std::string sonar_topic_ = "/sonar0";
 
     std::string rosbag_filename_;
+    std::string asl_folder_;
+    std::string left_img_folder_;
+    std::string right_img_folder_;
+    std::string imu_file_;
+    std::string timestamps_file_;
     float scale_ = 1.0;
     bool compress_image_ = true;
 
-    ros::NodeHandle nh_;
     ros::NodeHandle nh_private_;
-
-    // Define image transport for this and derived classes.
-    std::unique_ptr<image_transport::ImageTransport> it_;
-
-    // Message filters and to sync stereo images
-    typedef image_transport::SubscriberFilter ImageSubscriber;
-    ImageSubscriber left_img_subscriber_;
-    ImageSubscriber right_img_subscriber_;
-    typedef message_filters::sync_policies::ApproximateTime<
-        sensor_msgs::Image, sensor_msgs::Image>
-        sync_pol_img;
-    std::unique_ptr<message_filters::Synchronizer<sync_pol_img>> sync_img_;
-
-    // Define subscriber for IMU data
-    ros::Subscriber imu_subscriber_;
-    ros::Subscriber sonar_subscriber_;
 
     rosbag::Bag bag_;
 };

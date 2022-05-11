@@ -1,181 +1,198 @@
+#include "BagSync.h"
+
 #include <opencv2/core.hpp>
 
 #include <ros/console.h>
+#include <rosbag/view.h>
+#include <message_filters/subscriber.h>
+#include <experimental/filesystem>
 
-#include "BagSync.h"
+#include "Utils.h"
 
-BagSync::BagSync() : nh_private_("~"),
-                     nh_()
+namespace fs = std::experimental::filesystem;
+
+BagSync::BagSync() : nh_private_("~")
 {
 
-    ROS_FATAL_STREAM_COND(!nh_private_.getParam("rosbag_filename", rosbag_filename_),
-                          "RosBag file param not found");
-    if (nh_private_.hasParam("scale"))
-        nh_private_.getParam("scale", scale_);
-    if (nh_private_.hasParam("compress_image"))
-        nh_private_.getParam("compress_image", compress_image_);
-
-    // Wait until time is non-zero and valid: this is because at the ctor level
-    // we will be querying for gt pose and/or camera info.
-
-    while (ros::ok() && !ros::Time::now().isValid())
+    if (!nh_private_.hasParam("bag_filename"))
     {
-        if (ros::Time::isSimTime())
-        {
-            ROS_INFO_STREAM_ONCE("Waiting for ROS time to be valid... \n"
-                                 << "(Sim Time is enabled; run rosbag with --clock argument)");
-        }
-        else
-        {
-            ROS_INFO_STREAM_ONCE("Waiting for ROS time to be valid...");
-        }
+        ROS_FATAL_STREAM("RosBag file param not found");
+        exit(1);
+    }
+    else
+    {
+        nh_private_.getParam("bag_filename", rosbag_filename_);
     }
 
-    bag_.open(rosbag_filename_, rosbag::bagmode::Write);
+    if (!nh_private_.hasParam("asl_folder"))
+    {
+        ROS_FATAL_STREAM("asl folder not found");
+        exit(1);
+    }
+    else
+    {
+        nh_private_.getParam("asl_folder", asl_folder_);
+    }
 
-    //! IMU Subscriber
-    static constexpr size_t kMaxImuQueueSize = 1000u;
-    imu_subscriber_ = nh_.subscribe("/imu", kMaxImuQueueSize, &BagSync::callbackIMU, this);
+    if (nh_private_.hasParam("scale"))
+        nh_private_.getParam("scale", scale_);
+    if (nh_private_.hasParam("compressed"))
+        nh_private_.getParam("compressed", compress_image_);
 
-    //! Sonar Subscriber
-    static constexpr size_t kMaxSonarQueueSize = 1000u;
-    sonar_subscriber_ = nh_.subscribe("/sonar", kMaxSonarQueueSize, &BagSync::callbackSonar, this);
+    if (nh_private_.hasParam("left_image_topic"))
+        nh_private_.getParam("left_image_topic", left_img_topic_);
 
-    //! Vision Subscription
-    // Subscribe to stereo images. Approx time sync, should be exact though...
-    // We set the queue to only 1, since we prefer to drop messages to reach
-    // real-time than to be delayed...
-    static constexpr size_t kMaxImagesQueueSize = 10u;
-    it_ = std::make_unique<image_transport::ImageTransport>(nh_);
-    left_img_subscriber_.subscribe(*it_, "/camera0", kMaxImagesQueueSize);
-    right_img_subscriber_.subscribe(*it_, "/camera1", kMaxImagesQueueSize);
-    static constexpr size_t kMaxImageSynchronizerQueueSize = 10u;
-    sync_img_ = std::make_unique<message_filters::Synchronizer<sync_pol_img>>(
-        sync_pol_img(kMaxImageSynchronizerQueueSize),
-        left_img_subscriber_,
-        right_img_subscriber_);
+    if (nh_private_.hasParam("right_image_topic"))
+        nh_private_.getParam("right_image_topic", right_img_topic_);
 
-    sync_img_->registerCallback(
-        boost::bind(&BagSync::callbackStereoImages, this, _1, _2));
+    if (nh_private_.hasParam("imu_topic"))
+        nh_private_.getParam("imu_topic", imu_topic_);
+
+    if (compress_image_)
+    {
+        left_img_topic_ += "/compressed";
+        right_img_topic_ += "/compressed";
+    }
+
+    left_img_folder_ = asl_folder_ + "/mav0/cam0/data";
+    if (!fs::exists(left_img_folder_))
+    {
+        fs::create_directories(left_img_folder_);
+    }
+    right_img_folder_ = asl_folder_ + "/mav0/cam1/data";
+    if (!fs::exists(right_img_folder_))
+    {
+        fs::create_directories(right_img_folder_);
+    }
+    std::string imu_folder = asl_folder_ + "/mav0/imu0";
+    if (!fs::exists(imu_folder))
+    {
+        fs::create_directories(imu_folder);
+    }
+
+    imu_file_ = imu_folder + "/data.csv";
+    std::ofstream imu_file(imu_file_);
+    imu_file << "#timestamp [ns],w_RS_S_x [rad s^-1],w_RS_S_y [rad s^-1],w_RS_S_z [rad s^-1],a_RS_S_x [m s^-2],a_RS_S_y [m s^-2],a_RS_S_z [m s^-2]" << std::endl;
+    imu_file.close();
+
+    timestamps_file_ = asl_folder_ + "/mav0/timestamps.txt";
+}
+
+void BagSync::extractImages()
+{
+
+    bag_.open(rosbag_filename_, rosbag::bagmode::Read);
+
+    std::vector<std::string> topics;
+    topics.push_back(imu_topic_);
+    topics.push_back(left_img_topic_);
+    topics.push_back(right_img_topic_);
+
+    rosbag::View view(bag_, rosbag::TopicQuery(topics));
+
+    std::ofstream imu_file(imu_file_, std::ios::app);
+
+    BagSubscriber<sensor_msgs::Image> l_img_sub, r_img_sub;
+    BagSubscriber<sensor_msgs::CompressedImage> l_img_compressed_sub, r_img_compressed_sub;
+
+    // Use time synchronizer to make sure we get properly synchronized images
+    message_filters::TimeSynchronizer<sensor_msgs::Image, sensor_msgs::Image> image_sync(l_img_sub, r_img_sub, 25);
+    message_filters::TimeSynchronizer<sensor_msgs::CompressedImage, sensor_msgs::CompressedImage>
+        compressed_image_sync(l_img_compressed_sub, r_img_compressed_sub, 25);
+
+    if (compress_image_)
+    {
+        compressed_image_sync.registerCallback(boost::bind(&BagSync::compressedImageCallback, this, _1, _2));
+    }
+    else
+    {
+        image_sync.registerCallback(boost::bind(&BagSync::imageCallback, this, _1, _2));
+    }
+    for (rosbag::MessageInstance const m : view)
+    {
+        if (m.getTopic() == imu_topic_)
+        {
+            sensor_msgs::Imu::ConstPtr imu_msg = m.instantiate<sensor_msgs::Imu>();
+            imu_file << imu_msg->header.stamp.toNSec() << "," << imu_msg->angular_velocity.x << "," << imu_msg->angular_velocity.y << "," << imu_msg->angular_velocity.z
+                     << "," << imu_msg->linear_acceleration.x << "," << imu_msg->linear_acceleration.y << "," << imu_msg->linear_acceleration.z << std::endl;
+        }
+
+        if (m.getTopic() == left_img_topic_)
+        {
+            if (compress_image_)
+            {
+                sensor_msgs::CompressedImage::ConstPtr img_msg = m.instantiate<sensor_msgs::CompressedImage>();
+                if (img_msg != nullptr)
+                {
+                    l_img_compressed_sub.newMessage(img_msg);
+                }
+            }
+            else
+            {
+                sensor_msgs::Image::ConstPtr img_msg = m.instantiate<sensor_msgs::Image>();
+                if (img_msg != nullptr)
+                {
+                    l_img_sub.newMessage(img_msg);
+                }
+            }
+        }
+
+        if (m.getTopic() == right_img_topic_)
+        {
+            if (compress_image_)
+            {
+                sensor_msgs::CompressedImage::ConstPtr img_msg = m.instantiate<sensor_msgs::CompressedImage>();
+                if (img_msg != nullptr)
+                {
+                    r_img_compressed_sub.newMessage(img_msg);
+                }
+            }
+            else
+            {
+                sensor_msgs::Image::ConstPtr img_msg = m.instantiate<sensor_msgs::Image>();
+                if (img_msg != nullptr)
+                {
+                    r_img_sub.newMessage(img_msg);
+                }
+            }
+        }
+    }
+    bag_.close();
+    imu_file.close();
+}
+
+void BagSync::imageCallback(const sensor_msgs::ImageConstPtr &left_msg, const sensor_msgs::ImageConstPtr &right_msg)
+{
+    std::stringstream left_filename, right_filename;
+}
+
+void BagSync::compressedImageCallback(const sensor_msgs::CompressedImageConstPtr &left_msg, const sensor_msgs::CompressedImageConstPtr &right_msg)
+{
+    std::ofstream timestamps_file(timestamps_file_, std::ios::app);
+
+    ROS_INFO_STREAM_ONCE("Inside compressed image callback");
+    cv::Mat left = Utils::readCompressedRosImage(left_msg);
+    cv::Mat right = Utils::readCompressedRosImage(right_msg);
+
+    std::string left_filename = left_img_folder_ + "/" + std::to_string(left_msg->header.stamp.toNSec()) + ".png";
+    std::string right_filename = right_img_folder_ + "/" + std::to_string(right_msg->header.stamp.toNSec()) + ".png";
+
+    cv::imwrite(left_filename, left);
+    cv::imwrite(right_filename, right);
+
+    timestamps_file << left_msg->header.stamp.toNSec() << std::endl;
+    timestamps_file.close();
 }
 
 BagSync::~BagSync()
 {
     ROS_INFO_STREAM("!! BagSync Destructer Called !!");
-    bag_.close();
 }
 
-void BagSync::callbackIMU(const sensor_msgs::ImuConstPtr &imu_msg)
+int main(int argc, char **argv)
 {
-    ROS_WARN_ONCE(" !!! Inside IMU Callback !!!");
-    bag_.write(imu_topic_, imu_msg->header.stamp, imu_msg);
-}
-
-void BagSync::callbackStereoImages(const sensor_msgs::ImageConstPtr &left_msg,
-                                   const sensor_msgs::ImageConstPtr &right_msg)
-{
-    ROS_WARN_ONCE(" !!! Inside Stereo Callback !!!");
-    using Timestamp = std::uint64_t;
-    static Timestamp prev_stamp = 0;
-    static uint32_t seq = 0;
-
-    int h = left_msg->height;
-    int w = left_msg->width;
-
-    int new_h = int(h * scale_);
-    int new_w = int(w * scale_);
-    cv::Size size;
-    size.height = new_h;
-    size.width = new_w;
-
-    const Timestamp &timestamp_left = left_msg->header.stamp.toNSec();
-    const Timestamp &timestamp_right = right_msg->header.stamp.toNSec();
-
-    if (timestamp_left > prev_stamp and timestamp_right > prev_stamp)
-    {
-        Timestamp stamp = std::max(timestamp_right, timestamp_left);
-        cv::Mat left_img = readRosImage(left_msg);
-        cv::Mat right_img = readRosImage(right_msg);
-
-        uint32_t secs = stamp * 1e-9;
-        uint32_t n_secs = stamp % 1000000000;
-        ros::Time ros_time(secs, n_secs);
-
-        std_msgs::Header header;
-        header.seq = seq;
-        header.stamp = ros_time;
-
-        if (scale_ != 1.0)
-        {
-            cv::resize(left_img, left_img, size);
-            cv::resize(right_img, right_img, size);
-        }
-
-        if (compress_image_)
-        {
-            sensor_msgs::CompressedImagePtr left_msg, right_msg;
-            header.frame_id = "cam0";
-            left_msg = cv_bridge::CvImage(header, sensor_msgs::image_encodings::RGB8, left_img)
-                           .toCompressedImageMsg();
-            bag_.write(left_img_topic_ + "/compressed", ros_time, left_msg);
-
-            header.frame_id = "cam1";
-            right_msg = cv_bridge::CvImage(header, sensor_msgs::image_encodings::RGB8, right_img)
-                            .toCompressedImageMsg();
-            bag_.write(right_img_topic_ + "/compressed", ros_time, right_msg);
-        }
-        else
-        {
-            sensor_msgs::ImagePtr left_msg, right_msg;
-            header.frame_id = "cam0";
-            left_msg = cv_bridge::CvImage(header, sensor_msgs::image_encodings::RGB8, left_img)
-                           .toImageMsg();
-            bag_.write(left_img_topic_, ros_time, left_msg);
-
-            header.frame_id = "cam1";
-            right_msg = cv_bridge::CvImage(header, sensor_msgs::image_encodings::RGB8, right_img)
-                            .toImageMsg();
-            bag_.write(right_img_topic_, ros_time, right_msg);
-        }
-
-        prev_stamp = stamp;
-    }
-    else
-    {
-        ROS_WARN_STREAM("Left Stamp: " << timestamp_left
-                                       << "or Right Stamp: " << timestamp_right
-                                       << " not greater than the previous stamp: "
-                                       << prev_stamp);
-    }
-}
-
-void BagSync::callbackSonar(const imagenex831l::ProcessedRange::ConstPtr &sonar_msg)
-{
-    ROS_WARN_ONCE("!!! Inside Sonar Callback !!!");
-    bag_.write(sonar_topic_, sonar_msg->header.stamp, sonar_msg);
-}
-
-const cv::Mat BagSync::readRosImage(const sensor_msgs::ImageConstPtr &img_msg) const
-{
-    cv_bridge::CvImageConstPtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvCopy(img_msg);
-    }
-    catch (cv_bridge::Exception &exception)
-    {
-        ROS_FATAL("cv_bridge exception: %s", exception.what());
-        ros::shutdown();
-    }
-
-    const cv::Mat img_const = cv_ptr->image; // Don't modify shared image in ROS.
-    cv::Mat converted_img(img_const.size(), CV_8U);
-
-    if (img_msg->encoding == sensor_msgs::image_encodings::BGR8)
-    {
-        cv::cvtColor(img_const, converted_img, cv::COLOR_BGR2RGB);
-        return converted_img;
-    }
-
-    return img_const;
+    ros::init(argc, argv, "bag_sync");
+    BagSync bag_sync;
+    bag_sync.extractImages();
+    return 0;
 }

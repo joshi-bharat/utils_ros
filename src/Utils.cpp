@@ -2,6 +2,8 @@
 
 #include <ros/console.h>
 #include <fstream>
+#include <cv_bridge/cv_bridge.h>
+#include <signal.h>
 
 namespace Utils
 {
@@ -59,5 +61,65 @@ namespace Utils
         fin.close();
 
         return true;
+    }
+
+    const cv::Mat readRosImage(const sensor_msgs::ImageConstPtr &img_msg)
+    {
+        cv_bridge::CvImageConstPtr cv_ptr;
+        try
+        {
+            cv_ptr = cv_bridge::toCvCopy(img_msg);
+        }
+        catch (cv_bridge::Exception &exception)
+        {
+            ROS_FATAL("cv_bridge exception: %s", exception.what());
+            raise(SIGABRT);
+        }
+
+        const cv::Mat img_const = cv_ptr->image; // Don't modify shared image in ROS.
+        cv::Mat converted_img(img_const.size(), CV_8U);
+
+        if (img_msg->encoding == sensor_msgs::image_encodings::BGR8)
+        {
+            cv::cvtColor(img_const, converted_img, cv::COLOR_BGR2GRAY);
+            return converted_img;
+        }
+        else if (img_msg->encoding == sensor_msgs::image_encodings::RGB8)
+        {
+            cv::cvtColor(img_const, converted_img, cv::COLOR_BGR2GRAY);
+            return converted_img;
+        }
+
+        return img_const;
+    }
+
+    const cv::Mat readCompressedRosImage(const sensor_msgs::CompressedImageConstPtr &img_msg)
+    {
+        cv_bridge::CvImageConstPtr cv_ptr;
+        try
+        {
+            cv_ptr = cv_bridge::toCvCopy(img_msg);
+        }
+        catch (cv_bridge::Exception &exception)
+        {
+            ROS_FATAL("cv_bridge exception: %s", exception.what());
+            raise(SIGABRT);
+        }
+
+        const cv::Mat img_const = cv_ptr->image; // Don't modify shared image in ROS.
+        cv::Mat converted_img(img_const.size(), CV_8U);
+
+        if (cv_ptr->encoding == sensor_msgs::image_encodings::BGR8)
+        {
+            cv::cvtColor(img_const, converted_img, cv::COLOR_BGR2GRAY);
+            return converted_img;
+        }
+        else if (cv_ptr->encoding == sensor_msgs::image_encodings::RGB8)
+        {
+            cv::cvtColor(img_const, converted_img, cv::COLOR_BGR2GRAY);
+            return converted_img;
+        }
+
+        return img_const;
     }
 }

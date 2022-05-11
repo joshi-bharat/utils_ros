@@ -2,10 +2,11 @@
 
 #include <ros/console.h>
 
-#include "StereoSyncTopics.h"
+#include "StereoSyncOnline.h"
+#include "Utils.h"
 
-BagSync::BagSync() : nh_private_("~"),
-                     nh_()
+StereoSyncOnline::StereoSyncOnline() : nh_private_("~"),
+                                       nh_()
 {
 
     ROS_FATAL_STREAM_COND(!nh_private_.getParam("rosbag_filename", rosbag_filename_),
@@ -35,11 +36,11 @@ BagSync::BagSync() : nh_private_("~"),
 
     //! IMU Subscriber
     static constexpr size_t kMaxImuQueueSize = 1000u;
-    imu_subscriber_ = nh_.subscribe("/imu", kMaxImuQueueSize, &BagSync::callbackIMU, this);
+    imu_subscriber_ = nh_.subscribe("/imu", kMaxImuQueueSize, &StereoSyncOnline::callbackIMU, this);
 
     //! Sonar Subscriber
     static constexpr size_t kMaxSonarQueueSize = 1000u;
-    sonar_subscriber_ = nh_.subscribe("/sonar", kMaxSonarQueueSize, &BagSync::callbackSonar, this);
+    sonar_subscriber_ = nh_.subscribe("/sonar", kMaxSonarQueueSize, &StereoSyncOnline::callbackSonar, this);
 
     //! Vision Subscription
     // Subscribe to stereo images. Approx time sync, should be exact though...
@@ -56,23 +57,23 @@ BagSync::BagSync() : nh_private_("~"),
         right_img_subscriber_);
 
     sync_img_->registerCallback(
-        boost::bind(&BagSync::callbackStereoImages, this, _1, _2));
+        boost::bind(&StereoSyncOnline::callbackStereoImages, this, _1, _2));
 }
 
-BagSync::~BagSync()
+StereoSyncOnline::~StereoSyncOnline()
 {
     ROS_INFO_STREAM("!! BagSync Destructer Called !!");
     bag_.close();
 }
 
-void BagSync::callbackIMU(const sensor_msgs::ImuConstPtr &imu_msg)
+void StereoSyncOnline::callbackIMU(const sensor_msgs::ImuConstPtr &imu_msg)
 {
     ROS_WARN_ONCE(" !!! Inside IMU Callback !!!");
     bag_.write(imu_topic_, imu_msg->header.stamp, imu_msg);
 }
 
-void BagSync::callbackStereoImages(const sensor_msgs::ImageConstPtr &left_msg,
-                                   const sensor_msgs::ImageConstPtr &right_msg)
+void StereoSyncOnline::callbackStereoImages(const sensor_msgs::ImageConstPtr &left_msg,
+                                            const sensor_msgs::ImageConstPtr &right_msg)
 {
     ROS_WARN_ONCE(" !!! Inside Stereo Callback !!!");
     using Timestamp = std::uint64_t;
@@ -94,8 +95,8 @@ void BagSync::callbackStereoImages(const sensor_msgs::ImageConstPtr &left_msg,
     if (timestamp_left > prev_stamp and timestamp_right > prev_stamp)
     {
         Timestamp stamp = std::max(timestamp_right, timestamp_left);
-        cv::Mat left_img = readRosImage(left_msg);
-        cv::Mat right_img = readRosImage(right_msg);
+        cv::Mat left_img = Utils::readRosImage(left_msg);
+        cv::Mat right_img = Utils::readRosImage(right_msg);
 
         uint32_t secs = stamp * 1e-9;
         uint32_t n_secs = stamp % 1000000000;
@@ -149,33 +150,8 @@ void BagSync::callbackStereoImages(const sensor_msgs::ImageConstPtr &left_msg,
     }
 }
 
-void BagSync::callbackSonar(const imagenex831l::ProcessedRange::ConstPtr &sonar_msg)
+void StereoSyncOnline::callbackSonar(const imagenex831l::ProcessedRange::ConstPtr &sonar_msg)
 {
     ROS_WARN_ONCE("!!! Inside Sonar Callback !!!");
     bag_.write(sonar_topic_, sonar_msg->header.stamp, sonar_msg);
-}
-
-const cv::Mat BagSync::readRosImage(const sensor_msgs::ImageConstPtr &img_msg) const
-{
-    cv_bridge::CvImageConstPtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvCopy(img_msg);
-    }
-    catch (cv_bridge::Exception &exception)
-    {
-        ROS_FATAL("cv_bridge exception: %s", exception.what());
-        ros::shutdown();
-    }
-
-    const cv::Mat img_const = cv_ptr->image; // Don't modify shared image in ROS.
-    cv::Mat converted_img(img_const.size(), CV_8U);
-
-    if (img_msg->encoding == sensor_msgs::image_encodings::BGR8)
-    {
-        cv::cvtColor(img_const, converted_img, cv::COLOR_BGR2RGB);
-        return converted_img;
-    }
-
-    return img_const;
 }
