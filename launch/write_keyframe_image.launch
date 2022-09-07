@@ -1,15 +1,15 @@
 <launch>
 
   <!-- Arguments -->
-  <arg name="bag_file" value="/home/bjoshi/Downloads/pamir_shipwreck_sync.bag"/>
-  <arg name="image_dir" value="/home/bjoshi/colmap/pamir_shipwreck/images"/>
-  <arg name="traj_file" value="/home/bjoshi/pamir_shipwreck.txt"/>
+  <arg name="bag_file" value="/home/bjoshi/Downloads/cave_florida.bag"/>
+  <arg name="image_dir" value="/home/bjoshi/colmap/cavern_florida/images"/>
+  <arg name="traj_file" value="/home/bjoshi/svin_cave_florida.txt"/>
   <arg name="stereo" value="true"/>
   <arg name="left_image_topic" value="/slave1/image_raw"/>
   <arg name="right_image_topic" value="/slave2/image_raw"/>
-  <arg name="config_file" value="$(find utils_ros)/config/stereo_rig/shipwreck.yaml"/>
+  <arg name="config_file" value="$(find utils_ros)/config/stereo_rig/stereorig.yaml"/>
 
-  <arg name="scale" value="1.0"/>
+  <arg name="scale" value="0.5"/>
   <arg name="compressed" value="true"/>
 
   <node name="extract_keyframes" pkg="utils_ros" type="write_kf_images" output="screen">

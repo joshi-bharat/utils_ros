@@ -1,10 +1,10 @@
 <launch>
 
   <!-- Arguments -->
-  <arg name="image_dir" value="/home/bjoshi/colmap/test"/>
+  <arg name="image_dir" value="/home/bjoshi/colmap/stavronikita"/>
   <arg name="scale" value="1.0"/>
-  <arg name="img_freq" value="20"/>
-  <arg name="config_file" value="$(find utils_ros)/config/stereo_rig/shipwreck.yaml"/>
+  <arg name="img_freq" value="4"/>
+  <arg name="config_file" value="$(find utils_ros)/config/aqua/speedo1.yaml"/>
   <!-- <arg name="bag_file" value="/home/bjoshi/Downloads/cave_loop_w_cam_info.bag"/> -->
 
   <param name="/use_sim_time" value="true"/>
@@ -12,14 +12,14 @@
   <!-- <node name="rosbag" pkg="rosbag" type="play" args="$(arg bag_file) clock" />  -->
 
   <!-- To un-compress image topics -->
-  <node name="republish1" type="republish" pkg="image_transport" output="screen" args="compressed in:=/slave1/image_raw raw out:=/slave1/image_raw" />
-  <node name="republish2" type="republish" pkg="image_transport" output="screen" args="compressed in:=/slave2/image_raw raw out:=/slave2/image_raw" />
+  <node name="republish1" type="republish" pkg="image_transport" output="screen" args="compressed in:=/cam_fl/image_raw raw out:=/cam0/image_raw" />
+  <node name="republish2" type="republish" pkg="image_transport" output="screen" args="compressed in:=/cam_fr/image_raw raw out:=/cam1/image_raw" />
 
 
   <node name="colmap_stereo" pkg="utils_ros" type="colmap_stereo.py" output="screen">
 
-    <remap from="/camera0" to="/slave1/image_raw"/>
-    <remap from="/camera1" to="/slave2/image_raw"/>
+    <remap from="/camera0" to="/cam0/image_raw"/>
+    <remap from="/camera1" to="/cam1/image_raw"/>
 
     <param name="image_dir" value="$(arg image_dir)"/>
     <param name="scale" value="$(arg scale)"/>

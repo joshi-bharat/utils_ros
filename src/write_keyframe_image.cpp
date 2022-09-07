@@ -167,8 +167,9 @@ int main(int argc, char *argv[])
 
         if (kf_stamps.find(stamp) != kf_stamps.end())
         {
-            cv::resize(image, image, cv::Size(new_width, new_height));
             cv::undistort(image, undistorted_image, left_K, left_distort);
+            if (scale != 1.0)
+                cv::resize(undistorted_image, undistorted_image, cv::Size(new_width, new_height));
             cv::imwrite(filename, undistorted_image);
             kf_images++;
         }
@@ -191,8 +192,9 @@ int main(int argc, char *argv[])
         std::string filename = right_image_dir + "/" + std::to_string(stamp) + ".png";
         if (kf_stamps.find(stamp) != kf_stamps.end())
         {
-            cv::resize(image, image, cv::Size(new_width, new_height));
             cv::undistort(image, undistorted_image, right_K, right_distort);
+            if (scale != 1.0)
+                cv::resize(undistorted_image, undistorted_image, cv::Size(new_width, new_height));
             cv::imwrite(filename, undistorted_image);
         }
     }

@@ -1,0 +1,22 @@
+<launch>
+
+  <!-- Arguments -->
+  <arg name="ref_traj" default="/home/bjoshi/colmap/shipwreck/svin_traj.txt" />
+  <arg name="traj" default="/home/bjoshi/colmap/shipwreck/colmap_traj.txt"/>
+  <arg name="result_file" default="/home/bjoshi/colmap/shipwreck/colmap.txt"/>
+
+  <arg name="skip_first_line" default="false"/>
+
+  <node name="pose_interpolate" pkg="utils_ros" type="interpolate_traj" output="screen" required="true">
+
+    <param name="ref_traj" value="$(arg ref_traj)"/>
+    <param name="traj" value="$(arg traj)"/>
+    <param name="result_file" value="$(arg result_file)"/>
+    <param name="skip_first_line" value="$(arg skip_first_line)"/>
+
+  </node>
+
+</launch>
+
+
+

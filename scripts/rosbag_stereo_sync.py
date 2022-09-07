@@ -2,40 +2,28 @@
 
 from __future__ import print_function
 
+from numpy import double
+
 import rospy
 import rosbag
 import message_filters
 import argparse
 from tqdm import tqdm
-from collections import OrderedDict
 
-
-def sync(left_msg, right_msg, left_info, right_info):
-    # Matches timestamps in left and right messages
-    new_stamp = rospy.Time(nsecs=min(left_msg.header.stamp.to_nsec(),
-                           right_msg.header.stamp.to_nsec()))
-
-    if left_msg.header.stamp != left_info.header.stamp:
-        print("WARN Mismatched left camera info. Image: %s, Camera Info: %s, Difference: %s"
-              % (left_msg.header.stamp, left_info.header.stamp,
-                 abs(left_msg.header.stamp.to_sec() - left_info.header.stamp.to_sec())))
-    if right_msg.header.stamp != right_info.header.stamp:
-        print("WARN Mismatched right camera info. Image: %s, Camera Info: %s, Difference: %s"
-              % (right_msg.header.stamp, right_info.header.stamp,
-                 abs(right_msg.header.stamp.to_sec() - right_info.header.stamp.to_sec())))
-
-    left_msg.header.stamp = new_stamp
-    right_msg.header.stamp = new_stamp
-    left_info.header.stamp = new_stamp
-    right_info.header.stamp = new_stamp
-
-    return left_msg, right_msg, left_info, right_info
+stamps = open('stamps.txt', 'w')
+stamps.write('Left, Right, Common\n')
 
 
 def sync(left_msg, right_msg):
     # Matches timestamps in left and right messages
-    new_stamp = rospy.Time(nsecs=min(left_msg.header.stamp.to_nsec(),
-                           right_msg.header.stamp.to_nsec()))
+    new_nsecs = double(left_msg.header.stamp.to_nsec() + right_msg.header.stamp.to_nsec())/2.0
+    new_stamp = rospy.Time(nsecs=new_nsecs)
+    stamps = open('left.txt', 'a')
+    stamps = open('right.txt', 'a')
+
+    stamps.write(
+        f"{str(left_msg.header.stamp.to_nsec())},{str(right_msg.header.stamp.to_nsec())},{new_stamp.to_nsec()}\n")
+    stamps.close()
     left_msg.header.stamp = new_stamp
     right_msg.header.stamp = new_stamp
 
@@ -60,8 +48,6 @@ def bag_main(args):
 
     topics = topic_names(args.left, args.right, args.raw)
 
-    print(topics)
-
     filters = [message_filters.SimpleFilter() for _ in topics]
     sync_filter = message_filters.ApproximateTimeSynchronizer(filters, args.cache_size, args.slop)
 
@@ -70,8 +56,8 @@ def bag_main(args):
         for topic, msg, t in tqdm(ibag.read_messages(), total=ibag.get_message_count()):
             if topic in topics:
                 filters[topics.index(topic)].signalMessage(msg)
-            # else:
-            #     obag.write(topic, msg, t)
+            else:
+                obag.write(topic, msg, t)
 
 
 def main():
@@ -81,18 +67,15 @@ def main():
                       help="Path to input rosbag file (run live node if empty)")
     argp.add_argument("--obag",  nargs="?", metavar="OUT",
                       help="Path to output rosbag file (run live node if empty)")
-    argp.add_argument("--left", default="/cam_fl", help="Left topic")
-    argp.add_argument("--right", default="/cam_fr", help="Right topic")
-    argp.add_argument("--raw", action="store_true", help="Do not use compressed topics")
+    argp.add_argument("--left", default="/slave1", help="Left topic")
+    argp.add_argument("--right", default="/slave2", help="Right topic")
+    argp.add_argument("--raw", action="store_true",
+                      help="Do not use compressed topics", default=False)
     argp.add_argument("--cache_size", default=100, type=int, help="Cache size")
-    argp.add_argument("--slop", default=0.02, type=float, help="Maximum deviation between messages")
+    argp.add_argument("--slop", default=0.01, type=float,
+                      help="Maximum deviation between messages")
     args = argp.parse_args(rospy.myargv()[1:])
 
-    # if args.ibag is None and args.obag is None:
-    #     node_main(args)
-    # elif args.ibag is None or args.obag is None:
-    #     argp.error("Both IN and OUT must be specified to process rosbags")
-    # else:
     bag_main(args)
 
 
