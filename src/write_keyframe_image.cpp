@@ -138,11 +138,17 @@ int main(int argc, char *argv[])
         image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::BGR8)->image;
     }
 
-    int new_width = static_cast<int>(image.size().width * scale);
-    int new_height = static_cast<int>(image.size().height * scale);
+    int original_width = image.size().width;
+    int original_height = image.size().height;
+    int new_width = static_cast<int>(original_width * scale);
+    int new_height = static_cast<int>(original_height * scale);
 
     ROS_INFO_STREAM("Orignial height, width: " << image.size().height << ", " << image.size().width);
     ROS_INFO_STREAM("New height, width: " << new_height << ", " << new_width);
+
+    cv::Mat left_map_x, left_map_y, right_map_x, right_map_y;
+    cv::initUndistortRectifyMap(left_K, left_distort, cv::Mat(), left_K, cv::Size(original_width, original_height), CV_32FC1, left_map_x, left_map_y);
+    cv::initUndistortRectifyMap(right_K, right_distort, cv::Mat(), right_K, cv::Size(original_width, original_height), CV_32FC1, right_map_x, right_map_y);
 
     size_t kf_images = 0;
     cv::Mat undistorted_image;
@@ -167,7 +173,7 @@ int main(int argc, char *argv[])
 
         if (kf_stamps.find(stamp) != kf_stamps.end())
         {
-            cv::undistort(image, undistorted_image, left_K, left_distort);
+            cv::remap(image, undistorted_image, left_map_x, left_map_y, cv::INTER_LINEAR);
             if (scale != 1.0)
                 cv::resize(undistorted_image, undistorted_image, cv::Size(new_width, new_height));
             cv::imwrite(filename, undistorted_image);
@@ -192,7 +198,7 @@ int main(int argc, char *argv[])
         std::string filename = right_image_dir + "/" + std::to_string(stamp) + ".png";
         if (kf_stamps.find(stamp) != kf_stamps.end())
         {
-            cv::undistort(image, undistorted_image, right_K, right_distort);
+            cv::remap(image, undistorted_image, right_map_x, right_map_y, cv::INTER_LINEAR);
             if (scale != 1.0)
                 cv::resize(undistorted_image, undistorted_image, cv::Size(new_width, new_height));
             cv::imwrite(filename, undistorted_image);
