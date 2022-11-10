@@ -75,14 +75,9 @@ target_link_libraries(sync_images rosdata_utils)
 add_executable(add_svin_pose src/add_svin_gt.cpp)
 target_link_libraries(add_svin_pose rosdata_utils)
 
-add_executable(add_sonar src/add_sonar.cpp)
-target_link_libraries(add_sonar rosdata_utils)
-
 add_executable(interpolate_trajectories src/interpolate_trajectories.cpp)
 target_link_libraries(interpolate_trajectories rosdata_utils)
 
-add_executable(traj_to_pointcloud src/traj_to_pcl.cpp)
-target_link_libraries(traj_to_pointcloud ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 add_executable(write_kf_images src/write_keyframe_image.cpp)
 target_link_libraries(write_kf_images rosdata_utils -lstdc++fs)

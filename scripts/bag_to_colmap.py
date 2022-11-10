@@ -72,9 +72,9 @@ if __name__ == '__main__':
     if (rospy.has_param('~img_freq')):
         freq = rospy.get_param('~img_freq')
     
-    delay = 1.0/freq
+    delay = 1.0/freq  # type: ignore
     rospy.loginfo("Delay : {}".format(delay))
-    asl_converter = ASLConverter(image_folder, delay, scale=scale)
+    asl_converter = ASLConverter(image_folder, delay, scale=scale)  # type: ignore
 
     while not rospy.is_shutdown():
         rospy.spin()

@@ -1,0 +1,26 @@
+<launch>
+
+    <!-- Arguments -->
+    <arg name="image_dir" value="/home/bjoshi/colmap/bus_outside" />
+    <arg name="bag" value="/home/bjoshi/Downloads/bus_outside.bag" />
+    <arg name="left_topic" value="/slave1/image_raw/compressed" />
+    <arg name="right_topic" value="/slave2/image_raw/compressed" />
+    <arg name="config_file"
+        value="/home/bjoshi/ros_workspaces/utils_ws/src/utils_ros/config/stereo_rig/stereo_rig_1.yaml" />
+    <arg name="scale" value="0.5" />
+    <arg name="freq" value="8" />
+
+    <node name="gopro" pkg="utils_ros" type="extract_bag_stereo.py" output="screen" required="true">
+
+        <param name="image_dir" value="$(arg image_dir)" />
+        <param name="input_bag" value="$(arg bag)" />
+        <param name="left_topic" value="$(arg left_topic)" />
+        <param name="right_topic" value="$(arg right_topic)" />
+        <param name="config_file" value="$(arg config_file)" />
+
+        <param name="scale" value="$(arg scale)" />
+        <param name="freq" value="$(arg freq)" />
+
+    </node>
+
+</launch>

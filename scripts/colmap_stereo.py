@@ -10,7 +10,7 @@ from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge
 import numpy as np
 
-from message_filters import ApproximateTimeSynchronizer, Subscriber, TimeSynchronizer
+from message_filters import Subscriber, TimeSynchronizer
 
 
 def read_camera_intrinsics(cv_node: cv2.FileNode):
@@ -22,8 +22,6 @@ def read_camera_intrinsics(cv_node: cv2.FileNode):
     camera_matrix = cv_node.getNode("K").mat()
     distortion_coefficients = cv_node.getNode("D").mat()
 
-    print(camera_matrix)
-    print(distortion_coefficients)
 
     return camera_matrix, distortion_coefficients
 
@@ -145,11 +143,11 @@ if __name__ == "__main__":
     if rospy.has_param("~img_freq"):
         freq = rospy.get_param("~img_freq")
 
-    delay = 1.0 / freq
+    delay = 1.0 / freq  # type: ignore
     rospy.loginfo("Delay : {}".format(delay))
 
     colmap_stereo = ColmapStereo(
-        image_folder, delay, scale=scale, config_file=config_file
+        image_folder, delay, scale=scale, config_file=config_file  # type: ignore
     )
 
     while not rospy.is_shutdown():
