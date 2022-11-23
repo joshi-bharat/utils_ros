@@ -1,0 +1,21 @@
+<launch>
+
+    <!-- Arguments -->
+    <arg name="input_bag" value="/home/bjoshi/Downloads/afrl_aqua_bbdos_shipwreck.bag" />
+    <arg name="compressed" value="true" />
+    <arg name="output_bag" value="/home/bjoshi/afrl_aqua_bbdos_shipwreck_sync.bag" />
+
+    <arg name="left" value="/cam_fl/image_raw" />
+    <arg name="right" value="/cam_fr/image_raw" />
+    <node name="sync_bag" pkg="utils_ros" type="sync_bag" output="screen">
+
+        <param name="input_bag" value="$(arg input_bag)" />
+        <param name="output_bag" value="$(arg output_bag)" />
+
+        <param name="left_image_topic" value="$(arg left)" />
+        <param name="right_image_topic" value="$(arg right)" />
+        <param name="compressed" value="$(arg compressed)" />
+
+    </node>
+
+</launch>

@@ -21,6 +21,6 @@ namespace Utils
     bool getStampsFromTrajectory(const std::string &trajectory_path,
                                  std::vector<std::uint64_t> &time_stamps,
                                  bool skip_first_line = false);
-    const cv::Mat readRosImage(const sensor_msgs::ImageConstPtr &img_msg);
-    const cv::Mat readCompressedRosImage(const sensor_msgs::CompressedImageConstPtr &img_msg);
+    const cv::Mat readRosImage(const sensor_msgs::ImageConstPtr &img_msg, bool grayscale = true);
+    const cv::Mat readCompressedRosImage(const sensor_msgs::CompressedImageConstPtr &img_msg, bool grayscale = true);
 }

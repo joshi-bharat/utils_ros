@@ -63,7 +63,7 @@ namespace Utils
         return true;
     }
 
-    const cv::Mat readRosImage(const sensor_msgs::ImageConstPtr &img_msg)
+    const cv::Mat readRosImage(const sensor_msgs::ImageConstPtr &img_msg, bool grayscale)
     {
         cv_bridge::CvImageConstPtr cv_ptr;
         try
@@ -77,23 +77,32 @@ namespace Utils
         }
 
         const cv::Mat img_const = cv_ptr->image; // Don't modify shared image in ROS.
-        cv::Mat converted_img(img_const.size(), CV_8U);
-
-        if (img_msg->encoding == sensor_msgs::image_encodings::BGR8)
+        cv::Mat converted_img;
+        if (cv_ptr->encoding == sensor_msgs::image_encodings::BGR8)
         {
-            cv::cvtColor(img_const, converted_img, cv::COLOR_BGR2GRAY);
+            if (grayscale)
+            {
+                cv::cvtColor(img_const, converted_img, cv::COLOR_BGR2GRAY);
+            }
             return converted_img;
         }
-        else if (img_msg->encoding == sensor_msgs::image_encodings::RGB8)
+        else if (cv_ptr->encoding == sensor_msgs::image_encodings::RGB8)
         {
-            cv::cvtColor(img_const, converted_img, cv::COLOR_BGR2GRAY);
+            if (grayscale)
+            {
+                cv::cvtColor(img_const, converted_img, cv::COLOR_RGB2GRAY);
+            }
+            else
+            {
+                cv::cvtColor(img_const, converted_img, cv::COLOR_RGB2BGR);
+            }
             return converted_img;
         }
 
         return img_const;
     }
 
-    const cv::Mat readCompressedRosImage(const sensor_msgs::CompressedImageConstPtr &img_msg)
+    const cv::Mat readCompressedRosImage(const sensor_msgs::CompressedImageConstPtr &img_msg, bool grayscale)
     {
         cv_bridge::CvImageConstPtr cv_ptr;
         try
@@ -107,16 +116,25 @@ namespace Utils
         }
 
         const cv::Mat img_const = cv_ptr->image; // Don't modify shared image in ROS.
-        cv::Mat converted_img(img_const.size(), CV_8U);
-
+        cv::Mat converted_img;
         if (cv_ptr->encoding == sensor_msgs::image_encodings::BGR8)
         {
-            cv::cvtColor(img_const, converted_img, cv::COLOR_BGR2GRAY);
+            if (grayscale)
+            {
+                cv::cvtColor(img_const, converted_img, cv::COLOR_BGR2GRAY);
+            }
             return converted_img;
         }
         else if (cv_ptr->encoding == sensor_msgs::image_encodings::RGB8)
         {
-            cv::cvtColor(img_const, converted_img, cv::COLOR_BGR2GRAY);
+            if (grayscale)
+            {
+                cv::cvtColor(img_const, converted_img, cv::COLOR_RGB2GRAY);
+            }
+            else
+            {
+                cv::cvtColor(img_const, converted_img, cv::COLOR_RGB2BGR);
+            }
             return converted_img;
         }
 

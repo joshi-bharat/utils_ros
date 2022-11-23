@@ -1,0 +1,27 @@
+<launch>
+
+    <!-- Arguments -->
+    <arg name="colmap_folder" value="/home/bjoshi/colmap/shipwreck_stereo/images"/>
+    <arg name="scale" value="1.0"/>
+    <arg name="compressed" value="true"/>
+    <arg name="bag_filename" value="/home/bjoshi/Downloads/afrl_aqua_bbdos_shipwreck.bag"/>
+
+    <arg name="left" value="/cam_fl/image_raw"/>
+    <arg name="right" value="/cam_fr/image_raw"/>
+    <arg name="delay" value="0.2"/> 
+    <node name="gopro" pkg="utils_ros" type="extract_colmap" output="screen" required="true">
+
+        <param name="colmap_folder" value="$(arg colmap_folder)"/>
+        <param name="bag_filename" value="$(arg bag_filename)"/>
+
+        <param name="left_image_topic" value="$(arg left)"/>
+        <param name="right_image_topic" value="$(arg right)"/>
+        <param name="compressed" value="$(arg compressed)"/>
+        <param name="scale" value="$(arg scale)"/>
+        <param name="delay" value="$(arg delay)"/>
+
+    </node>
+
+</launch>
+
+
