@@ -8,38 +8,9 @@
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 #include <experimental/filesystem>
+#include "Utils.h"
 
 namespace fs = std::experimental::filesystem;
-
-void readIntrinsics(cv::FileNode &cam_node, cv::Mat &K, cv::Mat &distortion_coeffs)
-{
-    cv::FileNode knode = cam_node["K"]["data"];
-    if (knode.isSeq())
-    {
-        K.at<double>(0, 0) = static_cast<double>(knode[0]);
-        K.at<double>(1, 1) = static_cast<double>(knode[4]);
-        K.at<double>(0, 2) = static_cast<double>(knode[2]);
-        K.at<double>(1, 2) = static_cast<double>(knode[5]);
-    }
-    else
-    {
-        ROS_ERROR_STREAM("Camera Matrix is not a sequence");
-    }
-
-    cv::FileNode dnode = cam_node["D"]["data"];
-
-    if (dnode.isSeq())
-    {
-        distortion_coeffs.at<double>(0, 0) = static_cast<double>(dnode[0]);
-        distortion_coeffs.at<double>(1, 0) = static_cast<double>(dnode[1]);
-        distortion_coeffs.at<double>(2, 0) = static_cast<double>(dnode[2]);
-        distortion_coeffs.at<double>(3, 0) = static_cast<double>(dnode[3]);
-    }
-    else
-    {
-        ROS_ERROR_STREAM("Distortion coeffs is not a sequence");
-    }
-}
 
 int main(int argc, char *argv[])
 {
@@ -85,8 +56,8 @@ int main(int argc, char *argv[])
     cv::Mat right_distort = cv::Mat::zeros(4, 1, CV_64F);
     cv::Mat right_K = cv::Mat::eye(3, 3, CV_64F);
 
-    readIntrinsics(left_node, left_K, left_distort);
-    readIntrinsics(right_node, right_K, right_distort);
+    Utils::readIntrinsics(left_node, left_K, left_distort);
+    Utils::readIntrinsics(right_node, right_K, right_distort);
 
     if (traj_file.empty() || bag_file.empty() || left_image_topic.empty() || image_dir.empty() || config_file.empty())
         exit(1);

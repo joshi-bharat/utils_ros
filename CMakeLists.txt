@@ -57,7 +57,7 @@ add_library(rosdata_utils
             src/Utils.cpp
             src/PoseInterpolator.cpp
             src/Trajectory.cpp
-            src/StereoSyncOnline.cpp)
+            )
 
 target_link_libraries(rosdata_utils 
                       ${catkin_LIBRARIES}
@@ -66,11 +66,8 @@ target_link_libraries(rosdata_utils
                       )
 
 target_compile_options(rosdata_utils  PRIVATE -march=native)
-add_executable(asl_to_rosbag src/ASLtoRosBag.cpp)
+add_executable(asl_to_rosbag src/asl_to_rosbag.cpp)
 target_link_libraries(asl_to_rosbag rosdata_utils)
-
-add_executable(sync_images src/sync_images.cpp)
-target_link_libraries(sync_images rosdata_utils)
 
 add_executable(add_svin_pose src/add_svin_gt.cpp)
 target_link_libraries(add_svin_pose rosdata_utils)
@@ -78,9 +75,8 @@ target_link_libraries(add_svin_pose rosdata_utils)
 add_executable(interpolate_trajectories src/interpolate_trajectories.cpp)
 target_link_libraries(interpolate_trajectories rosdata_utils)
 
-
 add_executable(write_kf_images src/write_keyframe_image.cpp)
 target_link_libraries(write_kf_images rosdata_utils -lstdc++fs)
 
-add_executable(extract_bag src/BagSync.cpp)
-target_link_libraries(extract_bag rosdata_utils -lstdc++fs)
+add_executable(sync_bag src/sync_bag.cpp)
+target_link_libraries(sync_bag rosdata_utils -lstdc++fs)

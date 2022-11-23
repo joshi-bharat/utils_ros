@@ -1,0 +1,14 @@
+<launch>
+
+  <!-- Arguments -->
+  <arg name="traj_folder" value="/home/bjoshi/colmap/shipwreck_stereo/after_stereo"/>
+
+  <node name="traj_to_pcl" pkg="utils_ros" type="traj_to_pointcloud" output="screen"> 
+
+    <param name="traj_folder" value="$(arg traj_folder)"/>
+
+  </node>
+
+</launch>
+
+

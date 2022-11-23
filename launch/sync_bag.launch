@@ -1,27 +1,23 @@
 <launch>
 
-    <!-- Arguments -->
+    <arg name="input_bag" default="/home/bjoshi/Downloads/bus_out_loop_w_cam_info.bag" />
+    <arg name="output_bag" default="/home/bjoshi/Downloads/bus_outside.bag" />
+    <arg name="compressed" default="true" />
+    <arg name="left_image_topic" default="/slave1/image_raw" />
+    <arg name="right_image_topic" default="/slave2/image_raw" />
+    <arg name="imu_topic" default="/imu/imu" />
+    <arg name="scale" default="0.5" />
+    <arg name="config" default="$(find utils_ros)/config/stereo_rig/stereorig2.yaml" />
 
-    <param name="/use_sim_time" value="true"/>
-
-    <node name="republish1" type="republish" pkg="image_transport" output="screen" args="compressed in:=/cam_fl/image_raw raw out:=/cam0/image_raw" />
-    <node name="republish2" type="republish" pkg="image_transport" output="screen" args="compressed in:=/cam_fr/image_raw raw out:=/cam1/image_raw" />
-
-    <arg name="rosbag_filename" default="/home/bjoshi/cave_new.bag"/>
-    <arg name="scale" default="0.5"/>
-    <arg name="compress_images" default="false"/>
-
-    <node name="sync_images" pkg="utils_ros" type="sync_images" output="screen">
-
-        <param name="rosbag_filename" value="$(arg rosbag_filename)"/>
-        <param name="scale" value="$(arg scale)"/>
-        <param name="compress_image" value="$(arg compress_images)"/>
-
-        <remap from="/camera0" to="/cam0/image_raw"/>
-        <remap from="/camera1" to="/cam1/image_raw"/>
-        <remap from="/imu" to="/imu/imu" />
-        <remap from="/sonar" to="/imagenex831l/range"/>
-
+    <node name="sync_bag" pkg="utils_ros" type="sync_bag" output="screen">
+        <param name="input_bag" value="$(arg input_bag)" />
+        <param name="output_bag" value="$(arg output_bag)" />
+        <param name="left_image_topic" value="$(arg left_image_topic)" />
+        <param name="right_image_topic" value="$(arg right_image_topic)" />
+        <param name="imu_topic" value="$(arg imu_topic)" />
+        <param name="compressed" value="$(arg compressed)" />
+        <param name="scale" value="$(arg scale)" />
+        <param name="config" value="$(arg config)" />
     </node>
 
-</laun
+</launch>

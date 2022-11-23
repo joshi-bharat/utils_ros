@@ -123,7 +123,7 @@ namespace Utils
             {
                 cv::cvtColor(img_const, converted_img, cv::COLOR_BGR2GRAY);
             }
-            return converted_img;
+            return img_const;
         }
         else if (cv_ptr->encoding == sensor_msgs::image_encodings::RGB8)
         {
@@ -139,5 +139,35 @@ namespace Utils
         }
 
         return img_const;
+    }
+
+    void readIntrinsics(cv::FileNode &cam_node, cv::Mat &K, cv::Mat &distortion_coeffs)
+    {
+        cv::FileNode knode = cam_node["K"]["data"];
+        if (knode.isSeq())
+        {
+            K.at<double>(0, 0) = static_cast<double>(knode[0]);
+            K.at<double>(1, 1) = static_cast<double>(knode[4]);
+            K.at<double>(0, 2) = static_cast<double>(knode[2]);
+            K.at<double>(1, 2) = static_cast<double>(knode[5]);
+        }
+        else
+        {
+            ROS_ERROR_STREAM("Camera Matrix is not a sequence");
+        }
+
+        cv::FileNode dnode = cam_node["D"]["data"];
+
+        if (dnode.isSeq())
+        {
+            distortion_coeffs.at<double>(0, 0) = static_cast<double>(dnode[0]);
+            distortion_coeffs.at<double>(1, 0) = static_cast<double>(dnode[1]);
+            distortion_coeffs.at<double>(2, 0) = static_cast<double>(dnode[2]);
+            distortion_coeffs.at<double>(3, 0) = static_cast<double>(dnode[3]);
+        }
+        else
+        {
+            ROS_ERROR_STREAM("Distortion coeffs is not a sequence");
+        }
     }
 }

@@ -12,9 +12,9 @@
 #include "Definitions.h"
 
 namespace fs = std::experimental::filesystem;
-typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image>
+typedef message_filters::sync_policies::ExactTime<sensor_msgs::Image, sensor_msgs::Image>
     sync_pol_img;
-typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::CompressedImage, sensor_msgs::CompressedImage>
+typedef message_filters::sync_policies::ExactTime<sensor_msgs::CompressedImage, sensor_msgs::CompressedImage>
     sync_pol_compressed_img;
 
 std::string left_img_topic = "/cam0/image_raw";
@@ -31,11 +31,10 @@ float scale = 1.0;
 bool compress_image = true;
 rosbag::Bag bag;
 
-
 void imageCallback(const sensor_msgs::ImageConstPtr &left_msg, const sensor_msgs::ImageConstPtr &right_msg)
 {
     std::ofstream timestamps_file(timestamps_filename, std::ios::app);
-    
+
     ros::Time stamp = left_msg->header.stamp + (right_msg->header.stamp - left_msg->header.stamp) * 0.5;
 
     ROS_INFO_STREAM_ONCE("Inside compressed image callback");
@@ -74,7 +73,6 @@ void compressedImageCallback(const sensor_msgs::CompressedImageConstPtr &left_ms
 
 void readParameters(const ros::NodeHandle &nh)
 {
-   
 
     if (!nh.hasParam("bag_filename"))
     {
@@ -222,7 +220,6 @@ void extractImages()
     bag.close();
     imu_file.close();
 }
-
 
 int main(int argc, char **argv)
 {
