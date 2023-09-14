@@ -12,6 +12,11 @@ from tqdm import tqdm
 
 from sensor_msgs.msg import Image, CompressedImage
 
+clahe = cv2.createCLAHE(clipLimit=10.0, tileGridSize=(6, 6))
+
+start_time = 1694198420.37
+end_time = 1694200780.37
+
 
 class ImageExtractor():
     def __init__(self,
@@ -22,6 +27,7 @@ class ImageExtractor():
                  left_topic: str,
                  cache_size: int = 1000,
                  slop: float = 0.02,
+                 scale: float = 1.0,
                  right_topic: str = None) -> None:
 
         self.stereo = stereo
@@ -29,6 +35,7 @@ class ImageExtractor():
         self.img_dir = image_dir
         self.left_image_dir = os.path.join(self.img_dir, 'left')
         self.right_image_dir = os.path.join(self.img_dir, 'right')
+        self.scale = scale
 
         if (not os.path.exists(image_dir)):
             os.makedirs(image_dir)
@@ -74,10 +81,23 @@ class ImageExtractor():
             cv_image = self.cv_bridge.compressed_imgmsg_to_cv2(img_msg)
         else:
             cv_image = self.cv_bridge.imgmsg_to_cv2(img_msg)
-        cv2.imwrite(filename, cv_image)
+
+        h, w, c = cv_image.shape
+        if self.scale != 1.0:
+            cv_image = cv2.resize(cv_image, (int(w * scale), int(h * scale)))
+
+        grayscale = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+        hsv = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
+        result = cv2.mean(hsv)
+        if(result[2] < 60):
+            print("dark image. applying CLAHE")
+            grayscale = clahe.apply(grayscale)
+
+        cv2.imwrite(filename, grayscale)
+        cv2.imshow("image", grayscale)
+        cv2.waitKey(1)
 
     def extract_images(self, delay: float = 0.0):
-        start_time = self.bag.get_start_time()
         previous_stamp = self.bag.get_start_time()
 
         print("topics: {}".format(self.img_topics))
@@ -86,6 +106,8 @@ class ImageExtractor():
             if topic in self.img_topics:
                 if t.to_sec() < start_time:
                     continue
+                if t.to_sec() > end_time:
+                    break
                 if t.to_sec() - previous_stamp < delay:
                     continue
                 if self.stereo:
@@ -167,10 +189,11 @@ if __name__ == "__main__":
                                bag_file=bag_file,
                                stereo=stereo,
                                left_topic=left,
-                               right_topic=right,
                                compressed=compressed,
                                cache_size=cache_size,
-                               slop=slop)
+                               scale=scale,
+                               slop=slop,
+                               right_topic=right)
     extractor.extract_images(delay=delay)
 
     # while not rospy.is_shutdown():
